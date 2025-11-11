@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry
+from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry, String
 
 
 class SensorData:
@@ -15,15 +15,15 @@ class SensorData:
     """
 
     def __init__(self) -> None:
-        self.odom: Optional[Odometry] = None
-        self.scan: Optional[LaserScan] = None
-        self.joints: Optional[JointState] = None
-        self.aruco_poses:PoseArray = None
-        self.imu: Optional[IMU] = None
-        self.gripper_curr_state: Optional[String] = None
-        self.manipulator_curr_preset: Optional[String] = None
-        self.seen_hexes: Optional[PoseArray] = None
-        self.seen_robots: Optional[PoseArray] = None
+        self.odom: Odometry = Odometry()
+        self.scan: LaserScan = LaserScan()
+        self.joints: JointState = JointState()
+        self.aruco_poses: PoseArray = PoseArray()
+        self.imu: IMU = IMU()
+        self.gripper_curr_state: String = String()
+        self.manipulator_curr_preset: String = String()
+        self.seen_hexes: PoseArray = PoseArray()
+        self.seen_robots: PoseArray = PoseArray()
 
     @classmethod
     def initialized(cls) -> "SensorData":
