@@ -229,17 +229,66 @@ class JointState:
 @dataclass
 class IMU:
     ros_type = "sensor_msgs/Imu"
-    orientation: Dict[str, float] = field(default_factory=dict)
-    angular_velocity: Dict[str, float] = field(default_factory=dict)
-    linear_acceleration: Dict[str, float] = field(default_factory=dict)
+
+    # Orientation quaternion
+    qx: float = 0.0
+    qy: float = 0.0
+    qz: float = 0.0
+    qw: float = 1.0
+
+    # Euler orientation
+    roll: float = 0.0
+    pitch: float = 0.0
+    yaw: float = 0.0
+
+    # Angular velocity
+    wx: float = 0.0
+    wy: float = 0.0
+    wz: float = 0.0
+
+    # Linear acceleration
+    ax: float = 0.0
+    ay: float = 0.0
+    az: float = 0.0
 
     @classmethod
     def from_ros(cls, msg: dict):
+        ori = msg.get("orientation", {})
+        ang = msg.get("angular_velocity", {})
+        acc = msg.get("linear_acceleration", {})
+
+        q = np.array([
+            ori.get("x", 0.0),
+            ori.get("y", 0.0),
+            ori.get("z", 0.0),
+            ori.get("w", 1.0),
+        ])
+
+        roll, pitch, yaw = R.from_quat(q).as_euler("xyz", degrees=False)
+
         return cls(
-            orientation=msg.get("orientation", {}),
-            angular_velocity=msg.get("angular_velocity", {}),
-            linear_acceleration=msg.get("linear_acceleration", {}),
+            qx=q[0], qy=q[1], qz=q[2], qw=q[3],
+            roll=roll, pitch=pitch, yaw=yaw,
+            wx=ang.get("x", 0.0),
+            wy=ang.get("y", 0.0),
+            wz=ang.get("z", 0.0),
+            ax=acc.get("x", 0.0),
+            ay=acc.get("y", 0.0),
+            az=acc.get("z", 0.0),
         )
+
+    def to_ros(self):
+        return {
+            "orientation": {
+                "x": self.qx, "y": self.qy, "z": self.qz, "w": self.qw,
+            },
+            "angular_velocity": {
+                "x": self.wx, "y": self.wy, "z": self.wz,
+            },
+            "linear_acceleration": {
+                "x": self.ax, "y": self.ay, "z": self.az,
+            },
+        }
 
 
 # ------------------------------------------------------------

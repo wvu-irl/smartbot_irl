@@ -1,11 +1,86 @@
 # data.py
 import os
 import time
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import Any, Dict, List, Optional
 
 from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry
 
+# def _flatten_value(prefix: str, obj: Any) -> Dict[str, Any]:
+#     """
+#     Recursively flatten a dataclass, dict, list, or primitive value.
+#     Returns { "prefix_field_subfield": value, ... }
+#     """
+#     flat = {}
+
+#     # Nothing here → skip
+#     if obj is None:
+#         return flat
+
+#     # Dataclass → expand fields
+#     if is_dataclass(obj):
+#         for f in fields(obj):
+#             sub = getattr(obj, f.name)
+#             key = f"{prefix}_{f.name}"
+#             flat.update(_flatten_value(key, sub))
+#         return flat
+
+#     # Dict → expand keys
+#     if isinstance(obj, dict):
+#         for k, v in obj.items():
+#             key = f"{prefix}_{k}"
+#             flat.update(_flatten_value(key, v))
+#         return flat
+
+#     # Lists / tuples
+#     if isinstance(obj, (list, tuple)):
+#         for i, v in enumerate(obj):
+#             key = f"{prefix}_{i}"
+#             flat.update(_flatten_value(key, v))
+#         return flat
+
+#     # Base case → primitive value
+#     flat[prefix] = obj
+#     return flat
+
+def list_sensor_columns() -> list[str]:
+    """Return top-level keys from flatten()."""
+    s = SensorData.initialized()
+    return list(s.flatten().keys())
+    
+def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
+    """
+    Flatten dataclasses and dicts.
+    Leave lists/tuples intact as a single object.
+    """
+    flat = {}
+
+    if obj is None:
+        return flat
+
+    # Dataclass → expand fields
+    if is_dataclass(obj):
+        for f in fields(obj):
+            val = getattr(obj, f.name)
+            key = f"{prefix}_{f.name}"
+            flat.update(flatten_generic(key, val))
+        return flat
+
+    # Dict → expand key/value pairs
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            key = f"{prefix}_{k}"
+            flat.update(flatten_generic(key, v))
+        return flat
+
+    # Lists / tuples → DO NOT flatten, store as whole object
+    if isinstance(obj, (list, tuple)):
+        flat[prefix] = obj
+        return flat
+
+    # Primitive value
+    flat[prefix] = obj
+    return flat
 
 class SensorData:
     """
@@ -15,15 +90,15 @@ class SensorData:
     """
 
     def __init__(self) -> None:
-        self.odom: Optional[Odometry] = None
-        self.scan: Optional[LaserScan] = None
-        self.joints: Optional[JointState] = None
-        self.aruco_poses:PoseArray = None
-        self.imu: Optional[IMU] = None
-        self.gripper_curr_state: Optional[String] = None
-        self.manipulator_curr_preset: Optional[String] = None
-        self.seen_hexes: Optional[PoseArray] = None
-        self.seen_robots: Optional[PoseArray] = None
+        self.odom = Odometry()
+        self.scan = LaserScan()
+        self.joints = JointState()
+        self.aruco_poses = PoseArray()
+        self.imu = IMU()
+        self.gripper_curr_state = String()
+        self.manipulator_curr_preset = String()
+        self.seen_hexes = PoseArray()
+        self.seen_robots = PoseArray()
 
     @classmethod
     def initialized(cls) -> "SensorData":
@@ -71,6 +146,13 @@ class SensorData:
         keys = [k for k, v in vars(self).items() if v is not None]
         missing = [k for k, v in vars(self).items() if v is None]
         return f"SensorData(populated={keys}, missing={missing})"
+    def flatten(self) -> dict:
+        """Return a fully flattened dict of all sensor fields."""
+        out = {}
+        for name, value in vars(self).items():
+            out.update(flatten_generic(name, value))
+        return out
+
 
 
 @dataclass

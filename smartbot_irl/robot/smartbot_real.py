@@ -19,6 +19,10 @@ import roslibpy
 
 from ..data import Command, Pose, SensorData
 from ..drawing import Drawer
+from smartbot_irl.utils import SmartLogger
+import logging
+
+logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
 
 class SmartBotReal(SmartBotBase):
@@ -26,9 +30,9 @@ class SmartBotReal(SmartBotBase):
     Wrapper for the real robot's ros2 system.
     """
 
-    def __init__(self, drawing=False, smartbot_num=0) -> None:
+    def __init__(self, drawing=(), smartbot_num=0,) -> None:
         super().__init__(drawing)
-        self.drawer = Drawer(lambda: self.sensor_data) if drawing else None
+        self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
         self.smartbot_num = smartbot_num
         print(f"my num is {self.smartbot_num}")
@@ -77,13 +81,18 @@ class SmartBotReal(SmartBotBase):
         self._running = True
 
         # Connect to ros bridge server. Give up after 5s.
+        logger.info(msg="Connecting to smartbot...")
         self.client = roslibpy.Ros(host=host, port=port, is_secure=False)
         self.client.on_ready(self._connected.set)
         self.client.run()
-        print(f"Connecting to rosbridge at ws://{host}:{port} ...")
+        logger.info(f"Connecting to rosbridge at ws://{host}:{port} ...")
         self._connected.wait(timeout=5.0)
+
         if not self.client.is_connected:
+            logger.error(msg="Could not connect to smartbot!")
             raise RuntimeError("Failed to connect to rosbridge_server.")
+            
+
 
         # Set up publishers.
         self.cmd_vel_pub = roslibpy.Topic(

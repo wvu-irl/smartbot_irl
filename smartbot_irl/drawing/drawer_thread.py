@@ -12,16 +12,50 @@ class Drawer:
     Called explicitly each frame from the main simulation loop.
     """
 
-    def __init__(self, sensor_getter: Callable[[], SensorData], scale: float = 80.0):
+    def __init__(self, sensor_getter: Callable[[], SensorData], scale: float = 80.0,window_size=(800, 800), region=((-3,3),(-3,3))):
+        """
+
+        Args:
+            region (tuple(tuple)): Rectangular region defined by two points to be visualized.
+        """
         self._get = sensor_getter
         self.scale = scale
 
+        (xmin, xmax), (ymin, ymax) = region
+        self.xmin, self.xmax = xmin, xmax
+        self.ymin, self.ymax = ymin, ymax
+
+        world_w = xmax - xmin
+        world_h = ymax - ymin
+
+        # ---- window (pixels) ----
+        win_w, win_h = window_size
+        self.win_w, self.win_h = win_w, win_h
+
+        # ---- auto-scale: fit region exactly inside window ----
+        # one world meter maps to: pixels_per_meter
+        sx = win_w / world_w
+        sy = win_h / world_h
+        self.scale = min(sx, sy)  # preserve aspect ratio
+
+
+        # Compute window size in pixels from region & scale
+        width_px = int(world_w * scale)
+        height_px = int(world_h * scale)
+
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 800))
+        self.screen = pygame.display.set_mode((win_w, win_h))
         pygame.display.set_caption("SmartBot Viewer")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("monospace", 16)
         self._running = True
+
+    def world_to_screen(self, x, y):
+        # subtract region mins AND flip y axis
+        sx = int((x - self.xmin) * self.scale)
+        sy = int((self.ymax - y) * self.scale)
+        return sx, sy
+
 
     def draw_once(self, dt: float = 0.01):
         """Call this every frame from your main loop."""
@@ -42,8 +76,7 @@ class Drawer:
         self.screen.fill((25, 25, 25))
 
         # Convert to screen coordinates
-        cx = 400 + int(x * self.scale)
-        cy = 400 - int(y * self.scale)
+        cx, cy = self.world_to_screen(x, y)
 
         # Data Source is raw lidar.
         if scan.ranges:
@@ -92,11 +125,11 @@ class Drawer:
                 self.screen.blit(label, (mx + 8, my))
 
         # Draw robot body
-        pygame.draw.circle(self.screen, (255, 230, 0), (cx, cy), 30)
+        pygame.draw.circle(self.screen, (255, 230, 0), (cx, cy), 0.3 * self.scale)
 
         # Draw heading line
-        hx = cx + int(20 * math.cos(theta))
-        hy = cy - int(20 * math.sin(theta))
+        hx = cx + int(0.5 * self.scale * math.cos(theta))
+        hy = cy - int(0.5 * self.scale * math.sin(theta))
         pygame.draw.line(self.screen, (255, 50, 50), (cx, cy), (hx, hy), 3)
 
         # Draw text overlay

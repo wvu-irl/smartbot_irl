@@ -15,6 +15,8 @@ class SimEngine:
         self.wheel_base = wheel_base
         self.last_t = time.time()
         self.state = SensorData.initialized()  # holds all simulated values
+        self._last_vx = 0.0
+        self._last_vy = 0.0
 
         self.obstacles: list[tuple[float, float, float, float]] = []
 
@@ -76,6 +78,7 @@ class SimEngine:
         # Update synthetic sensor readings
         self._update_lidar()
         self._update_markers()
+        self._update_imu(dt)
 
         return s
 
@@ -83,6 +86,36 @@ class SimEngine:
         """Add an axis-aligned rectangular obstacle centered at (x, y)."""
         half_w, half_h = w / 2.0, h / 2.0
         self.obstacles.append((x - half_w, x + half_w, y - half_h, y + half_h))
+    def _update_imu(self, dt: float):
+        s = self.state
+
+        # angular velocity (gyroscope)
+        gyro_z = s.odom.wz
+
+        # compute linear accel by differentiating velocity
+        # world-frame derivatives
+        vx = s.odom.vx * math.cos(s.odom.yaw)
+        vy = s.odom.vx * math.sin(s.odom.yaw)
+
+        ax_world = (vx - self._last_vx) / dt if dt > 1e-6 else 0.0
+        ay_world = (vy - self._last_vy) / dt if dt > 1e-6 else 0.0
+
+        self._last_vx = vx
+        self._last_vy = vy
+
+        # transform accel to robot frame
+        cy = math.cos(-s.odom.yaw)
+        sy = math.sin(-s.odom.yaw)
+        accel_x = cy * ax_world - sy * ay_world
+        accel_y = sy * ax_world + cy * ay_world
+
+        # add a bit of sensor noise
+        import random
+        noise = lambda s: s + random.gauss(0, 0.02)
+
+        s.imu.wz = noise(gyro_z)
+        s.imu.ax = noise(accel_x)
+        s.imu.ay = noise(accel_y)
 
     def _update_lidar(self):
         """Populate self.state.scan with simulated range readings."""

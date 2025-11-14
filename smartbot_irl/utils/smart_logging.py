@@ -1,9 +1,11 @@
 import logging
 import re
 import time
+from time import time
 from typing import Any
 import sys
 from colorama import init as colorama_init
+
 
 colorama_init(strip=not sys.stdout.isatty())
 
@@ -30,7 +32,7 @@ class RegexRateLimitFilter(logging.Filter):
 
         msg = record.getMessage()
         key = self._normalize(msg)
-        now = time.time()
+        now = time()
         last = self._last_emit.get(key, 0.0)
         if now - last < rate:
             return False
@@ -99,11 +101,22 @@ class SmartLogger:
 
     def log(self, msg: Any, *, rate: float = 0.0, level: int = logging.INFO):
         try:
-            msg_str = str(msg)
+            msg_str = '\n'+str(msg)
         except Exception:
             msg_str = f"<unprintable {type(msg).__name__}>"
         # just call logger.log() normally, passing rate info
         self._logger.log(level, msg_str, extra={"_rate_limit_interval": rate})
+    
+    def setLevel(self, level: int):
+        r"""
+        Sets the minimum severity level to print out.
+
+        Args:
+            level (int): Logging level constant.
+                ``logging.DEBUG``, ``logging.INFO``, ``logging.WARN``,
+                ``logging.ERROR``, and ``logging.CRITICAL``.
+        """
+        self._logger.setLevel(level)
 
     # convenience
     def info(self, msg: Any, rate: float = 0.0):
@@ -117,3 +130,11 @@ class SmartLogger:
 
     def error(self, msg: Any, rate: float = 0.0):
         self.log(msg, rate=rate, level=logging.ERROR)
+
+
+logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
+
+def check_realtime(start_t:float, tolerance=0.05) -> None:
+    dt = time() - start_t  # Check if your code is running fast enough.
+    if dt > tolerance:
+        logger.warn(f"The step() loop took {dt:2f}s!", rate=1)
