@@ -68,6 +68,20 @@ class FigureWrapper:
             else:
                 raise ValueError(f"{target} does not accept kwarg '{k}'")
 
+    def _expand_yval(self, yval):
+        """
+        Normalize a y-value into a list of scalars.
+        Accepts scalars, lists, numpy arrays, pandas Series.
+        """
+        if np.isscalar(yval):
+            return [float(yval)]
+
+        if isinstance(yval, (list, tuple, np.ndarray, pd.Series)):
+            # Convert numpy/pandas objects to python floats
+            return [float(v) for v in yval]
+
+        raise TypeError(f"Unsupported y-value type: {type(yval)}")
+
     def add_line(self, x_col=None, y_col=None, window=1000, **kwargs):
         if y_col is None:
             raise ValueError("y_col must be specified")
@@ -76,10 +90,9 @@ class FigureWrapper:
         ax = self._new_subplot()
 
         # Normalize y_col to a list
-        if not isinstance(y_col, list):
-            y_col_list = [y_col]
-        else:
-            y_col_list = y_col
+        # y_col is a list of column names
+        # but the actual row values may themselves be lists!
+        y_col_list = [y_col] if not isinstance(y_col, list) else list(y_col)
 
         # Split kwargs into artist kwargs vs axes kwargs
         artist_kwargs = {}
@@ -123,7 +136,18 @@ class FigureWrapper:
                 ak["label"] = lbl
 
             (line,) = ax.plot([], [], **ak)
-            artists.append(line)
+            artists.append([line])
+
+        # artists = []
+        # for lbl, col in zip(labels, colors):
+        #     ak = dict(artist_kwargs)
+        #     if col is not None:
+        #         ak["color"] = col
+        #     if lbl is not None:
+        #         ak["label"] = lbl
+
+        #     (line,) = ax.plot([], [], **ak)
+        #     artists.append(line)
 
         # Apply axes kwargs
         if axes_kwargs:
@@ -133,8 +157,14 @@ class FigureWrapper:
             ax.legend(handlelength=3)
 
         # For each y-col create its own buffer
-        buffers = [([], []) for _ in y_col_list]
-        self.fig.tight_layout()
+        # buffers = [([], []) for _ in y_col_list]
+        buffers = []
+        for _ in y_col_list:
+            buffers.append(([[]], [[]]))  # xbufs, ybufs: start with 1 empty trace
+
+        # self.fig.tight_layout()
+        self.fig.set_size_inches(10, 8, forward=True)
+        self.fig.subplots_adjust(hspace=0.3)
 
         self.items.append((ax, "line", artists, x_col, y_col_list, window, buffers))
         return artists
@@ -147,24 +177,48 @@ class FigureWrapper:
 
     def update(self, df_last_row: pd.Series):
         for ax, kind, artists, x_col, y_col_list, window, buffers in self.items:
-            # Compute x value once
-            if x_col is None:
-                xval = df_last_row.name
-            else:
-                xval = df_last_row[x_col]
+            # Compute x once
+            xval = df_last_row.name if x_col is None else df_last_row[x_col]
 
-            # Update each y-column independently
-            for line, ycol, (xbuf, ybuf) in zip(artists, y_col_list, buffers):
-                yval = df_last_row[ycol]
+            # Iterate over y-cols
+            for i, ycol in enumerate(y_col_list):
+                xbufs, ybufs = buffers[i]
+                line_list = artists[i]
 
-                xbuf.append(xval)
-                ybuf.append(yval)
+                raw = df_last_row[ycol]
 
-                if len(xbuf) > window:
-                    xbuf.pop(0)
-                    ybuf.pop(0)
+                # Normalize input into a list of floats
+                if np.isscalar(raw):
+                    yvals = [float(raw)]
+                elif isinstance(raw, (list, tuple, np.ndarray, pd.Series)):
+                    yvals = [float(v) for v in raw]
+                else:
+                    raise TypeError(f"Column {ycol} has unsupported type {type(raw)}")
 
-                line.set_data(xbuf, ybuf)
+                # Auto-expand if yvals is longer than existing lines
+                if len(yvals) > len(line_list):
+                    extra = len(yvals) - len(line_list)
+                    for k in range(extra):
+                        (new_line,) = ax.plot([], [], label=f"{ycol}[{len(line_list) + k}]")
+                        line_list.append(new_line)
+                        xbufs.append([])
+                        ybufs.append([])
+                    ax.legend()
+
+                # Update each component
+                for j, yval in enumerate(yvals):
+                    xb = xbufs[j]
+                    yb = ybufs[j]
+
+                    xb.append(xval)
+                    yb.append(yval)
+
+                    if len(xb) > window:
+                        xb.pop(0)
+                    if len(yb) > window:
+                        yb.pop(0)
+
+                    line_list[j].set_data(xb, yb)
 
             ax.relim()
             ax.autoscale_view()

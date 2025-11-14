@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any, Dict, List, Optional
 
-from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry
+from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry, String
 
 # def _flatten_value(prefix: str, obj: Any) -> Dict[str, Any]:
 #     """
@@ -43,11 +43,13 @@ from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String
 #     flat[prefix] = obj
 #     return flat
 
+
 def list_sensor_columns() -> list[str]:
     """Return top-level keys from flatten()."""
     s = SensorData.initialized()
     return list(s.flatten().keys())
-    
+
+
 def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
     """
     Flatten dataclasses and dicts.
@@ -82,6 +84,7 @@ def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
     flat[prefix] = obj
     return flat
 
+
 class SensorData:
     """
     Container for all SmartBot sensor topics.
@@ -90,15 +93,15 @@ class SensorData:
     """
 
     def __init__(self) -> None:
-        self.odom = Odometry()
-        self.scan = LaserScan()
-        self.joints = JointState()
-        self.aruco_poses = PoseArray()
-        self.imu = IMU()
-        self.gripper_curr_state = String()
-        self.manipulator_curr_preset = String()
-        self.seen_hexes = PoseArray()
-        self.seen_robots = PoseArray()
+        self.odom: Odometry = Odometry()
+        self.scan: LaserScan = LaserScan()
+        self.joints: JointState = JointState()
+        self.aruco_poses: PoseArray = PoseArray()
+        self.imu: IMU = IMU()
+        self.gripper_curr_state: String = String()
+        self.manipulator_curr_preset: String = String()
+        self.seen_hexes: PoseArray = PoseArray()
+        self.seen_robots: PoseArray = PoseArray()
 
     @classmethod
     def initialized(cls) -> "SensorData":
@@ -118,6 +121,7 @@ class SensorData:
         self.seen_hexes = PoseArray()
         self.seen_robots = PoseArray()
         return self
+
     # ------------------------------------------------------------------
     def to_ros(self) -> dict:
         """Convert only populated fields to ROS-like dicts."""
@@ -146,13 +150,13 @@ class SensorData:
         keys = [k for k, v in vars(self).items() if v is not None]
         missing = [k for k, v in vars(self).items() if v is None]
         return f"SensorData(populated={keys}, missing={missing})"
+
     def flatten(self) -> dict:
         """Return a fully flattened dict of all sensor fields."""
         out = {}
         for name, value in vars(self).items():
             out.update(flatten_generic(name, value))
         return out
-
 
 
 @dataclass

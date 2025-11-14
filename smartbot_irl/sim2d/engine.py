@@ -71,6 +71,10 @@ class SimEngine:
         s.odom.x += s.odom.vx * math.cos(s.odom.yaw) * dt
         s.odom.y += s.odom.vx * math.sin(s.odom.yaw) * dt
 
+        # Update wheel positions
+        # s.joints.positions += s.joints.velocities * dt
+        s.joints.positions = [p + v * dt for p, v in zip(s.joints.positions, s.joints.velocities)]
+
         if s.odom.yaw > math.pi:
             s.odom.yaw -= 2 * math.pi
         elif s.odom.yaw < -math.pi:
@@ -86,6 +90,7 @@ class SimEngine:
         """Add an axis-aligned rectangular obstacle centered at (x, y)."""
         half_w, half_h = w / 2.0, h / 2.0
         self.obstacles.append((x - half_w, x + half_w, y - half_h, y + half_h))
+
     def _update_imu(self, dt: float):
         s = self.state
 
@@ -111,6 +116,7 @@ class SimEngine:
 
         # add a bit of sensor noise
         import random
+
         noise = lambda s: s + random.gauss(0, 0.02)
 
         s.imu.wz = noise(gyro_z)

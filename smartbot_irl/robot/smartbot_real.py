@@ -30,15 +30,16 @@ class SmartBotReal(SmartBotBase):
     Wrapper for the real robot's ros2 system.
     """
 
-    def __init__(self, drawing=(), smartbot_num=0,) -> None:
-        super().__init__(drawing)
+    # def __init__(self, drawing=(), smartbot_num=0,) -> None:
+    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))):
+        super().__init__(drawing=drawing, draw_region=draw_region)
+
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
         self.smartbot_num = smartbot_num
         print(f"my num is {self.smartbot_num}")
         self.client: roslibpy.Ros | None = None
         self._connected = threading.Event()
-
 
         # Specify which topics and their types we will subscribe to.
         self.sensor_data = SensorData()
@@ -91,8 +92,6 @@ class SmartBotReal(SmartBotBase):
         if not self.client.is_connected:
             logger.error(msg="Could not connect to smartbot!")
             raise RuntimeError("Failed to connect to rosbridge_server.")
-            
-
 
         # Set up publishers.
         self.cmd_vel_pub = roslibpy.Topic(
@@ -133,6 +132,7 @@ class SmartBotReal(SmartBotBase):
         if x is None or y is None:
             # randomize within a 3x3 meter box centered at origin
             import random
+
             x = random.uniform(-3.0, 3.0)
             y = random.uniform(-3.0, 3.0)
 
