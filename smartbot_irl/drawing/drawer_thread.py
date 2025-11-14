@@ -12,7 +12,13 @@ class Drawer:
     Called explicitly each frame from the main simulation loop.
     """
 
-    def __init__(self, sensor_getter: Callable[[], SensorData], scale: float = 80.0,window_size=(800, 800), region=((-3,3),(-3,3))):
+    def __init__(
+        self,
+        sensor_getter: Callable[[], SensorData],
+        scale: float = 80.0,
+        window_size=(800, 800),
+        region=((-3, 3), (-3, 3)),
+    ):
         """
 
         Args:
@@ -38,7 +44,6 @@ class Drawer:
         sy = win_h / world_h
         self.scale = min(sx, sy)  # preserve aspect ratio
 
-
         # Compute window size in pixels from region & scale
         width_px = int(world_w * scale)
         height_px = int(world_h * scale)
@@ -55,7 +60,6 @@ class Drawer:
         sx = int((x - self.xmin) * self.scale)
         sy = int((self.ymax - y) * self.scale)
         return sx, sy
-
 
     def draw_once(self, dt: float = 0.01):
         """Call this every frame from your main loop."""
@@ -111,7 +115,7 @@ class Drawer:
         if d.seen_hexes and d.seen_hexes.poses:
             markers = d.seen_hexes
             # print(markers)
-            for pose in markers.poses:
+            for pose, id in zip(markers.poses, markers.marker_ids):
                 # Marker is in robot frame → transform to world
                 rel_x, rel_y = pose.x, pose.y
                 mx_world = d.odom.x + math.cos(theta) * rel_x - math.sin(theta) * rel_y
@@ -120,8 +124,10 @@ class Drawer:
                 mx = 400 + int(self.scale * mx_world)
                 my = 400 - int(self.scale * my_world)
 
-                pygame.draw.rect(self.screen, (255, 180, 0), pygame.Rect(mx - 6, my - 6, 12, 12), 2)
-                label = self.font.render("aruco", True, (255, 200, 50))
+                pygame.draw.rect(
+                    self.screen, (255, 180, 0), pygame.Rect(mx - 6, my - 6, 12, 12), 7
+                )
+                label = self.font.render(f"{id}", True, (255, 163, 33))
                 self.screen.blit(label, (mx + 8, my))
 
         # Draw robot body

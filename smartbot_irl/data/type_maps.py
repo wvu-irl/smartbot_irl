@@ -1,6 +1,6 @@
 # smartbot_irl/data/type_maps.py
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import Any, List, Dict
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
@@ -150,6 +150,26 @@ class PoseArray:
 
 # ------------------------------------------------------------
 @dataclass
+class ArucoMarkers:
+    ros_type = "ros2_aruco_interfaces/ArucoMarkers"
+    poses: List[Pose] = field(default_factory=list)
+    marker_ids: List[int] = field(default_factory=list)
+
+    @classmethod
+    def from_ros(cls, msg: dict):
+        poses = [Pose.from_ros(p) for p in msg.get("poses", [])]
+        marker_ids = list(msg.get("marker_ids", []))
+        return cls(poses=poses, marker_ids=marker_ids)
+
+    def to_ros(self) -> dict[str, Any]:
+        return {
+            "poses": [p.to_ros() for p in self.poses],
+            "marker_ids": list(self.marker_ids),
+        }
+
+
+# ------------------------------------------------------------
+@dataclass
 class LaserScan:
     """
     Represents a 2D planar laser scan message.
@@ -257,18 +277,25 @@ class IMU:
         ang = msg.get("angular_velocity", {})
         acc = msg.get("linear_acceleration", {})
 
-        q = np.array([
-            ori.get("x", 0.0),
-            ori.get("y", 0.0),
-            ori.get("z", 0.0),
-            ori.get("w", 1.0),
-        ])
+        q = np.array(
+            [
+                ori.get("x", 0.0),
+                ori.get("y", 0.0),
+                ori.get("z", 0.0),
+                ori.get("w", 1.0),
+            ]
+        )
 
         roll, pitch, yaw = R.from_quat(q).as_euler("xyz", degrees=False)
 
         return cls(
-            qx=q[0], qy=q[1], qz=q[2], qw=q[3],
-            roll=roll, pitch=pitch, yaw=yaw,
+            qx=q[0],
+            qy=q[1],
+            qz=q[2],
+            qw=q[3],
+            roll=roll,
+            pitch=pitch,
+            yaw=yaw,
             wx=ang.get("x", 0.0),
             wy=ang.get("y", 0.0),
             wz=ang.get("z", 0.0),
@@ -280,13 +307,20 @@ class IMU:
     def to_ros(self):
         return {
             "orientation": {
-                "x": self.qx, "y": self.qy, "z": self.qz, "w": self.qw,
+                "x": self.qx,
+                "y": self.qy,
+                "z": self.qz,
+                "w": self.qw,
             },
             "angular_velocity": {
-                "x": self.wx, "y": self.wy, "z": self.wz,
+                "x": self.wx,
+                "y": self.wy,
+                "z": self.wz,
             },
             "linear_acceleration": {
-                "x": self.ax, "y": self.ay, "z": self.az,
+                "x": self.ax,
+                "y": self.ay,
+                "z": self.az,
             },
         }
 

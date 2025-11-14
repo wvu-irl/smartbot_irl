@@ -9,7 +9,16 @@ import yaml
 from .smartbot_base import SmartBotBase
 from .topic_loader import DynamicSubscriberManager
 from ..data.converters import ROS_TYPE_MAP
-from ..data.type_maps import Odometry, LaserScan, JointState, PoseArray, IMU, Bool, String
+from ..data.type_maps import (
+    ArucoMarkers,
+    Odometry,
+    LaserScan,
+    JointState,
+    PoseArray,
+    IMU,
+    Bool,
+    String,
+)
 
 os.environ["AUTOBAHN_USE_NVX"] = "0"
 import threading
@@ -52,7 +61,7 @@ class SmartBotReal(SmartBotBase):
             "gripper_curr_state": (String, "gripper_curr_state"),
             "manipulator_curr_preset": (String, "manipulator_curr_preset"),
             "seen_robots": (PoseArray, "seen_robots"),
-            "seen_hexes": (PoseArray, "seen_hexes"),
+            "seen_hexes": (ArucoMarkers, "seen_hexes"),
         }
 
         # Keep a list of our connected topics.

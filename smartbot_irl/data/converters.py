@@ -5,7 +5,7 @@ Convert from roslibpys dict-ified ros2 messages into our data classes. When addi
 
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-from .type_maps import Pose, PoseArray, LaserScan, JointState, IMU, Bool, String
+from .type_maps import ArucoMarkers, Pose, PoseArray, LaserScan, JointState, IMU, Bool, String
 
 
 def from_pose(msg: dict) -> Pose:
@@ -107,6 +107,41 @@ def from_string(msg: dict) -> String:
         data=msg.get("data", ""),
     )
 
+
+def from_aruco(msg: dict) -> ArucoMarkers:
+    poses = []
+    for p in msg.get("poses", []):
+        pos = p["position"]
+        ori = p["orientation"]
+
+        qx = ori.get("x", 0.0)
+        qy = ori.get("y", 0.0)
+        qz = ori.get("z", 0.0)
+        qw = ori.get("w", 1.0)
+        quat = np.array([qx, qy, qz, qw])
+
+        roll, pitch, yaw = R.from_quat(quat).as_euler("xyz", degrees=False)
+
+        poses.append(
+            Pose(
+                x=pos.get("x", 0.0),
+                y=pos.get("y", 0.0),
+                z=pos.get("z", 0.0),
+                qx=qx,
+                qy=qy,
+                qz=qz,
+                qw=qw,
+                roll=roll,
+                pitch=pitch,
+                yaw=yaw,
+            )
+        )
+
+    marker_ids = list(msg.get("marker_ids", []))
+
+    return ArucoMarkers(poses=poses, marker_ids=marker_ids)
+
+
 def from_odometry(msg: dict) -> Pose:
     pose = msg["pose"]["pose"]
     pos = pose["position"]
@@ -145,4 +180,5 @@ ROS_TYPE_MAP = {
     "sensor_msgs/Imu": from_imu,
     "std_msgs/Bool": from_bool,
     "std_msgs/String": from_string,
+    "ros2_aruco_interfaces/ArucoMarkers": from_aruco,
 }

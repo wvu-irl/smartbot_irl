@@ -4,7 +4,18 @@ import time
 from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any, Dict, List, Optional
 
-from .type_maps import IMU, JointState, LaserScan, Pose, PoseArray, Bool, String, Odometry, String
+from .type_maps import (
+    IMU,
+    ArucoMarkers,
+    JointState,
+    LaserScan,
+    Pose,
+    PoseArray,
+    Bool,
+    String,
+    Odometry,
+    String,
+)
 
 # def _flatten_value(prefix: str, obj: Any) -> Dict[str, Any]:
 #     """
@@ -100,7 +111,8 @@ class SensorData:
         self.imu: IMU = IMU()
         self.gripper_curr_state: String = String()
         self.manipulator_curr_preset: String = String()
-        self.seen_hexes: PoseArray = PoseArray()
+        # self.seen_hexes: PoseArray = PoseArray()
+        self.seen_hexes: ArucoMarkers = ArucoMarkers()
         self.seen_robots: PoseArray = PoseArray()
 
     @classmethod
@@ -118,7 +130,7 @@ class SensorData:
         self.imu = IMU()
         self.gripper_curr_state = String()
         self.manipulator_curr_preset = String()
-        self.seen_hexes = PoseArray()
+        self.seen_hexes = ArucoMarkers()
         self.seen_robots = PoseArray()
         return self
 
