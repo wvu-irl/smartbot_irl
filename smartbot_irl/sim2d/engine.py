@@ -216,7 +216,7 @@ class SimEngine:
 
     def _update_markers(self):
         """Compute marker poses relative to the robot body frame."""
-        from ..data.type_maps import Pose, PoseArray
+        from ..data.type_maps import Pose, PoseArray, ArucoMarkers
 
         s = self.state
         rx, ry, rtheta = s.odom.x, s.odom.y, s.odom.yaw
@@ -229,7 +229,7 @@ class SimEngine:
             rel_x = math.cos(-rtheta) * dx - math.sin(-rtheta) * dy
             rel_y = math.sin(-rtheta) * dx + math.cos(-rtheta) * dy
             rel_poses.append(Pose(x=rel_x, y=rel_y, z=0.0))
-        s.seen_hexes = PoseArray(poses=rel_poses)
+        s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=[48] * len(rel_poses))
 
     def read_all(self):
         return self.state
