@@ -9,11 +9,7 @@ devel/
 logs/
 build/
 bin/
-lib/
-msg_gen/
-srv_gen/
-msg/*Action.msg
-msg/*ActionFeedback.msg
+lib/ msg_gen/ srv_gen/ msg/*Action.msg msg/*ActionFeedback.msg
 msg/*ActionGoal.msg
 msg/*ActionResult.msg
 msg/*Feedback.msg
@@ -385,3 +381,20 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+*.csv
+
+
+# docs ignore
+# Ignore Sphinx autosummary output
+docs/source/api/generated/
+docs/source/api/generated/**
+
+# Ignore autosummary index file
+docs/source/api/index.rst
+
+# Ignore Sphinx doctrees and build
+docs/_build/
+docs/.doctrees/
+docs/source/.doctrees/
+
