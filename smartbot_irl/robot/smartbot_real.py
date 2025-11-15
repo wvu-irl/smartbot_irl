@@ -7,7 +7,6 @@ from typing import Optional
 import yaml
 
 from .smartbot_base import SmartBotBase
-from .topic_loader import DynamicSubscriberManager
 from ..data.converters import ROS_TYPE_MAP
 from ..data.type_maps import (
     ArucoMarkers,

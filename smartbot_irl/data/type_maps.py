@@ -10,6 +10,25 @@ import numpy as np
 # ------------------------------------------------------------
 @dataclass
 class Pose:
+    """
+    Generic pose with position, quaternion orientation,
+    and roll pitch yaw angles.
+
+    Maps to ROS2 message``geometry_msgs/Pose``. Has RPY angles for convenience.
+
+    Attributes:
+        x (float): Position along the X-axis in meters.
+        y (float): Position along the Y-axis in meters.
+        z (float): Position along the Z-axis in meters.
+        qx (float): Quaternion X component.
+        qy (float): Quaternion Y component.
+        qz (float): Quaternion Z component.
+        qw (float): Quaternion W component.
+        roll (float): Roll angle in radians.
+        pitch (float): Pitch angle in radians.
+        yaw (float): Yaw angle in radians.
+    """
+
     ros_type = "geometry_msgs/Pose"
 
     x: float = 0.0
@@ -25,6 +44,20 @@ class Pose:
 
     @classmethod
     def from_ros(cls, msg: dict):
+        """
+        Create a ``Pose`` from a ROS ``geometry_msgs/Pose`` msg.
+
+        The method extracts the ``position`` and ``orientation`` fields,
+        converts the quaternion to roll–pitch–yaw using
+        ``scipy.spatial.transform.Rotation``, and returns a populated ``Pose``.
+
+        Args:
+            msg (dict): Dict corresponding to ros2 ``geometry_msgs/Pose``
+            message with``position`` and ``orientation`` keys
+
+        Returns:
+            Pose: Parsed pose instance.
+        """
         pos = msg.get("position", {})
         ori = msg.get("orientation", {})
         q = np.array(
@@ -49,7 +82,23 @@ class Pose:
             yaw=yaw,
         )
 
-    def to_ros(self):
+    # TODO convert RPY back to quat?
+    def to_ros(self) -> dict[str, dict[str, float]]:
+        """
+        Create a ``geometry_msgs/Pose`` from a ROS ``Pose`` msg.
+
+        The method extracts the ``position`` and ``orientation`` fields, then
+        builds a dict matching the ROS2 ``geometry_msgs/Pose`` message
+        structure.
+
+        Returns:
+            dict[str, dict[str, float]]: Dict mirroring ROS2
+            ``geometry_msgs/Pose`` message structure.
+
+        Example:
+            >>> p = Pose(x=1.0, y=2.0, yaw=3.14)
+            >>> ros = p.to_ros()
+        """
         return {
             "position": {"x": self.x, "y": self.y, "z": self.z},
             "orientation": {"x": self.qx, "y": self.qy, "z": self.qz, "w": self.qw},
@@ -174,7 +223,7 @@ class LaserScan:
     """
     Represents a 2D planar laser scan message.
 
-    This class mirrors the fields of :msg:`sensor_msgs/LaserScan` and provides
+    This class mirrors the fields of the ros2 msg `sensor_msgs/LaserScan` and provides
     conversion helpers to and from ROS dictionary form.
 
     Attributes

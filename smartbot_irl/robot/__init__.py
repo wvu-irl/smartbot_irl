@@ -9,7 +9,5 @@ from typing import TypeAlias
 SmartBotType: TypeAlias = SmartBotReal | SmartBotSim
 
 __all__ = [
-    "Command",
     "SmartBot",
-    "SensorData",
 ]

@@ -6,9 +6,10 @@ from ..data import Command, SensorData
 
 
 class SimEngine:
-    """
-    Simple 2D differential-drive dynamics integrator.
-    Integrates wheel velocities to pose using forward Euler.
+    """Simple 2D differential-drive sim.
+
+    Returns:
+        _type_: _description_
     """
 
     def __init__(self, wheel_base: float = 0.3):
@@ -32,7 +33,11 @@ class SimEngine:
 
     # ------------------------------------------------------------------
     def apply_command(self, cmd: Command) -> None:
-        """Apply a Command instance to the simulated robot."""
+        """Apply a Command instance to the simulated robot.
+
+        Args:
+            cmd (Command): _description_
+        """
         s = self.state
 
         lin = cmd.linear_vel or 0.0
@@ -58,7 +63,14 @@ class SimEngine:
 
     # ------------------------------------------------------------------
     def step(self, dt: float | None = None) -> SensorData:
-        """Integrate robot motion forward by dt and return updated SensorData."""
+        """Integrate robot motion forward by dt and return updated SensorData.
+
+        Args:
+            dt (float | None, optional): _description_. Defaults to None.
+
+        Returns:
+            SensorData: _description_
+        """
         now = time.time()
         if dt is None:
             dt = now - self.last_t
@@ -86,8 +98,16 @@ class SimEngine:
 
         return s
 
-    def add_obstacle(self, x: float, y: float, w: float, h: float):
-        """Add an axis-aligned rectangular obstacle centered at (x, y)."""
+    def add_obstacle(self, x: float, y: float, w: float, h: float) -> None:
+        """Add an axis-aligned rectangular obstacle centered at (x, y).
+
+        Args:
+            x (float): _description_
+            y (float): _description_
+            w (float): _description_
+            h (float): _description_
+        """
+
         half_w, half_h = w / 2.0, h / 2.0
         self.obstacles.append((x - half_w, x + half_w, y - half_h, y + half_h))
 
@@ -158,7 +178,15 @@ class SimEngine:
             scan.ranges[i] = min(r, max_range)
 
     def place_hex(self, x: float | None = None, y: float | None = None):
-        """Place a new simulated marker in the world at (x, y) or a random obstacle-free location."""
+        """Place a new simulated marker in the world at (x, y) or a random obstacle-free location.
+
+        Args:
+            x (float | None, optional): _description_. Defaults to None.
+            y (float | None, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         import random
 
         def is_inside_obstacle(px: float, py: float, margin: float = 1) -> bool:

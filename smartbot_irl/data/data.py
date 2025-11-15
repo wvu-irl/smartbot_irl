@@ -17,43 +17,6 @@ from .type_maps import (
     String,
 )
 
-# def _flatten_value(prefix: str, obj: Any) -> Dict[str, Any]:
-#     """
-#     Recursively flatten a dataclass, dict, list, or primitive value.
-#     Returns { "prefix_field_subfield": value, ... }
-#     """
-#     flat = {}
-
-#     # Nothing here → skip
-#     if obj is None:
-#         return flat
-
-#     # Dataclass → expand fields
-#     if is_dataclass(obj):
-#         for f in fields(obj):
-#             sub = getattr(obj, f.name)
-#             key = f"{prefix}_{f.name}"
-#             flat.update(_flatten_value(key, sub))
-#         return flat
-
-#     # Dict → expand keys
-#     if isinstance(obj, dict):
-#         for k, v in obj.items():
-#             key = f"{prefix}_{k}"
-#             flat.update(_flatten_value(key, v))
-#         return flat
-
-#     # Lists / tuples
-#     if isinstance(obj, (list, tuple)):
-#         for i, v in enumerate(obj):
-#             key = f"{prefix}_{i}"
-#             flat.update(_flatten_value(key, v))
-#         return flat
-
-#     # Base case → primitive value
-#     flat[prefix] = obj
-#     return flat
-
 
 def list_sensor_columns() -> list[str]:
     """Return top-level keys from flatten()."""
