@@ -1,76 +1,124 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import sys
+from datetime import datetime
 
-project = "Smartbot IRL"
-copyright = "2025, Nathaniel Pearson"
+
+# # Add project root to sys.path
+# sys.path.insert(0, os.path.abspath("../../smartbot_irl"))
+
+
+PROJECT_ROOT = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
+sys.path.insert(0, PROJECT_ROOT)
+
+print("=== DEBUG CONF.PY ===")
+print("CWD:", os.getcwd())
+print("sys.path[0]:", sys.path[0])
+print("sys.path:", sys.path)
+print("======================")
+
+
+# ------------------------------------------------------------
+# Project information
+# ------------------------------------------------------------
+project = "SmartBot IRL"
 author = "Nathaniel Pearson"
 release = "0.1"
+copyright = f"{datetime.now().year}, {author}"
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+# ------------------------------------------------------------
+# Path setup
+# ------------------------------------------------------------
+# Add project root so autodoc can import smartbot_irl
 
+# ------------------------------------------------------------
+# Extensions
+# ------------------------------------------------------------
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",  # for Google/Numpy docstrings
-    "sphinx.ext.viewcode",
-    "myst_parser",  # to support Markdown
     "sphinx.ext.autosummary",
-    "sphinx.ext.doctest",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
-    "sphinx.ext.coverage",
     "sphinx.ext.autosectionlabel",
-    "sphinxcontrib.katex",
+    "myst_parser",
     "sphinx_copybutton",
     "sphinx_design",
-    # "myst_nb",
-    # "sphinx.ext.linkcode",
     "sphinxcontrib.mermaid",
-    "sphinx_sitemap",
+    "sphinx.ext.autodoc.typehints",
 ]
 
-
+# ------------------------------------------------------------
+# Markdown (MyST)
+# ------------------------------------------------------------
 myst_enable_extensions = [
     "colon_fence",
     "deflist",
+    # "linkify",
     "html_image",
 ]
 
-autosummary_generate = True
-autodoc_default_options = {"members": True, "undoc-members": False, "show-inheritance": False}
-html_theme = "pydata_sphinx_theme"
-html_title = "SmartBot IRL"
 
-html_theme = "furo"
-html_theme_options = {
-    "logo": {"text": "SmartBot IRL"},
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "show_prev_next": False,
+autodoc_mock_imports = [
+    "matplotlib",
+    "numpy",
+]
+
+
+# ------------------------------------------------------------
+# Autodoc & Autosummary
+# ------------------------------------------------------------
+autosummary_generate = True
+
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": False,
+    "member-order": "bysource",
+    "show-inheritance": False,
+    "exclude-members": "__weakref__",
 }
 
-html_baseurl = "https://smartbots.wvirl.com"  # needed for sphinx-sitemap
-sitemap_locales = [None]
-sitemap_excludes = [
-    "search.html",
-    "genindex.html",
-]
-sitemap_url_scheme = "{link}"
+# Show type hints in description, PyTorch style
+autodoc_typehints = "description"
 
-# html_additional_pages = {
-#     "404": "404.html",
-# }
+# ------------------------------------------------------------
+# Intersphinx links (optional but useful)
+# ------------------------------------------------------------
 
+
+# ------------------------------------------------------------
+# Theme (choose ONE)
+# ------------------------------------------------------------
+html_theme = "furo"
+html_title = "SmartBot IRL"
+
+html_theme_options = {
+    "top_of_page_buttons": [],
+}
+
+# ------------------------------------------------------------
+# HTML static files
+# ------------------------------------------------------------
 templates_path = ["_templates"]
+html_static_path = ["_static"]
+
 exclude_patterns = []
 
+# ------------------------------------------------------------
+# Sitemap (if publishing)
+# ------------------------------------------------------------
+html_baseurl = "https://smartbots.wvirl.com"
+sitemap_locales = [None]
+sitemap_excludes = ["search.html", "genindex.html"]
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
-html_static_path = ["_static"]
+print("=== IMPORT TEST ===")
+try:
+    import smartbot_irl
+
+    print("OK: smartbot_irl imported")
+except Exception as e:
+    print("FAIL:", type(e).__name__, e)
+print("===================")
