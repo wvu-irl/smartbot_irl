@@ -4,7 +4,7 @@ Your computer must have some minimal software packages installed before the
 SmartBots can be used. Linux and windows are both supported. A mainstream Linux distro is
 recommended since windows will require more troubleshooting and is generally difficult to work with.
 
-## Installing Linux Dependencies
+## Linux
 
 The following packages are needed:
 
@@ -38,7 +38,7 @@ python --version
 which should report `Python 3.12.10`.
 
 
-## Installing Windows Dependencies
+## Windows
 
 The following packages are needed:
 

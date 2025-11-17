@@ -65,6 +65,27 @@ autodoc_mock_imports = [
 ]
 
 # ------------------------------------------------------------
+# LaTeX (PDF) Output Configuration
+# ------------------------------------------------------------
+latex_engine = 'pdflatex'  # or 'xelatex' or 'lualatex' for better unicode/font support
+
+latex_elements = {
+    'latexmkopts': '-interaction=nonstopmode -f',
+    'papersize': 'letterpaper',  # or 'a4paper'
+    'pointsize': '11pt',
+    'preamble': r"""
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\setlistdepth{10}
+\renewlist{itemize}{itemize}{10}
+\renewlist{enumerate}{enumerate}{10}
+""",
+    'figure_align': 'H',
+}
+
+
+# ------------------------------------------------------------
 # Autodoc & Autosummary
 # ------------------------------------------------------------
 autosummary_generate = True

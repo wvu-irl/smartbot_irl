@@ -1,5 +1,10 @@
 # Setting Up Your Workspace
 
+```{contents} Table of Contents
+:depth: 3
+```
+
+In this document we will:
 - Clone the repo using git
 - Open the `smartbot3_project_template` folder in VSCode
 - Install workspace recommended extensions

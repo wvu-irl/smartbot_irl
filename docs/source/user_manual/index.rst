@@ -1,15 +1,20 @@
 User Manual
 ===========
 
-The user manual provides detailed reference material for installing, configuring, and extending SmartBot IRL.
+The user manual will help you get started with using the SmartBots.
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Manual
+   :caption: SmartBot Hardware
 
-   the_shell
+   smartbot_basics
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: SmartBot Software
+
    installing_deps
    setup_workspace
-   activating_robot
    run_robot
 
