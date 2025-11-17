@@ -80,7 +80,7 @@ See the following gif for details if you are confused.
 
 - Install [Python Install Manager](https://www.python.org/downloads/release/pymanager-250/). This will install Python3.14 automatically
   - Choose `y` when prompted to add commands directory to your PATH
-  - Chose `y` when prompted to install the CPython runtime
+  - Cho0se `y` when prompted to install the CPython runtime
 - Run `py install 3.12` in a shell
 - Check that `python3.12` was installed
 

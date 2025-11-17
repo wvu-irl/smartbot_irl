@@ -7,7 +7,7 @@ Once we have our workspace setup and dependencies installed we are ready to make
 
 ## Start hardware interface on the robot
 
-Before the robot will respond to commands the hardware interface code _on the robot_ must be running. Fortunately this has been greatly simplified. We can star the hardware interface with two methods: A VSCode task or the shell.
+Before the robot will respond to commands the hardware interface code _on the robot_ must be running. Fortunately this has been greatly simplified. We can start the hardware interface with two methods: A VSCode task or the shell.
 
 ### Start hardware interface with VSCode task
 
@@ -15,7 +15,7 @@ Before the robot will respond to commands the hardware interface code _on the ro
 
 If the "Fast Tasks" extension was installed then several buttons will be available in the "Explorer" pane which will automate the process of starting the robot.
 
-<img src='./docs/images/start_robot_vsc.png' style="max-width:300;  height:auto;">
+<img src='../_static/images/start_robot_vsc.png' style="max-width:300;  height:auto;">
 
 
 <div style="max-width: 100%; overflow-x: auto;">

@@ -23,7 +23,18 @@ TODO
 
 ## Windows Virtual Environment
 
-### Option 1: Setting up a venv using the shell
+### Option 1: Setting up a venv using VSCode Tasks
+If the "fast-tasks" extension is installed then a small section will appear in
+the bottom "Explorer" pane. The buttons in this section will automate the
+process of creating the venv and installing packages.
+
+
+<img src="../_static/images/vsc_tasks_loc.png" style="max-width:600px; height:auto;">
+
+<img src="../_static/images/vsc_tasks_setup_venv.png" style="max-width:600px; height:auto;">
+
+
+### Option 2: Setting up a venv using the shell
 
 :::{note}
 Make sure to run the following commands from inside the top level of the `smartbot3_project_template` you cloned!
@@ -41,19 +52,7 @@ python3.12 -m venv .venv
   </video>
 </div>
 
-Then install python dependencies using `pip.exe` inside of the `.venv` directory:
-
-```bash
-.venv/Scripts/pip.exe install -r requirements.txt
-```
-
-<div class="video-card">
-  <video controls style="width: 100%; height: auto;" poster="../_static/gifs/demo_preview.gif">
-    <source src="../_static/videos/win_venv_req_install.webm" type="video/webm">
-  </video>
-</div>
-
-Then install the `smartbot_irl` package using:
+Then install the `smartbot_irl` package and all dependencies using:
 
 ```bash
 .venv/Scripts/pip.exe install -e smartbot_irl
@@ -65,6 +64,3 @@ Then install the `smartbot_irl` package using:
   </video>
 </div>
 
-### Option 2: Setting up a venv using VSCode
-
-asd
