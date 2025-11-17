@@ -26,11 +26,11 @@ jobs:
 
       - name: Install documentation dependencies
         run: |
-          pip install -r smartbot_irl/docs/requirements.txt
+          pip install -r docs/requirements.txt
           pip install .
 
       - name: Build Sphinx HTML
-        working-directory: smartbot_irl/docs
+        working-directory: docs
         run: |
           make clean
           make html
@@ -38,7 +38,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: smartbot_irl/docs/_build/html
+          path: docs/_build/html
 
   deploy:
     needs: build
