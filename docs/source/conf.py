@@ -1,31 +1,28 @@
-# Configuration file for the Sphinx documentation builder.
-
 import os
 import sys
 from datetime import datetime
 
+print('=== TEMPLATE PATHS ===')
+print(os.listdir(os.path.join(os.path.dirname(__file__), '_templates')))
+print('======================')
 
-# # Add project root to sys.path
-# sys.path.insert(0, os.path.abspath("../../smartbot_irl"))
-
-
-PROJECT_ROOT = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
 sys.path.insert(0, PROJECT_ROOT)
 
-print("=== DEBUG CONF.PY ===")
-print("CWD:", os.getcwd())
-print("sys.path[0]:", sys.path[0])
-print("sys.path:", sys.path)
-print("======================")
+print('=== DEBUG CONF.PY ===')
+print('CWD:', os.getcwd())
+print('sys.path[0]:', sys.path[0])
+print('sys.path:', sys.path)
+print('======================')
 
 
 # ------------------------------------------------------------
 # Project information
 # ------------------------------------------------------------
-project = "SmartBot IRL"
-author = "Nathaniel Pearson"
-release = "0.1"
-copyright = f"{datetime.now().year}, {author}"
+project = 'SmartBot IRL'
+author = 'Nathaniel Pearson'
+release = '0.1'
+copyright = f'{datetime.now().year}, {author}'
 
 # ------------------------------------------------------------
 # Path setup
@@ -36,52 +33,59 @@ copyright = f"{datetime.now().year}, {author}"
 # Extensions
 # ------------------------------------------------------------
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.todo",
-    "sphinx.ext.autosectionlabel",
-    "myst_parser",
-    "sphinx_copybutton",
-    "sphinx_design",
-    "sphinxcontrib.mermaid",
-    "sphinx.ext.autodoc.typehints",
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.autosectionlabel',
+    'myst_parser',
+    'sphinx_copybutton',
+    'sphinx_design',
+    'sphinxcontrib.mermaid',
+    'sphinx.ext.autodoc.typehints',
 ]
 
 # ------------------------------------------------------------
 # Markdown (MyST)
 # ------------------------------------------------------------
 myst_enable_extensions = [
-    "colon_fence",
-    "deflist",
+    'colon_fence',
+    'deflist',
     # "linkify",
-    "html_image",
+    'html_image',
 ]
 
 
 autodoc_mock_imports = [
-    "matplotlib",
-    "numpy",
+    'matplotlib',
+    'numpy',
+    'pandas',
 ]
-
 
 # ------------------------------------------------------------
 # Autodoc & Autosummary
 # ------------------------------------------------------------
 autosummary_generate = True
+# autosummary_ignore_module_all = False
+autosummary_ignore_module_all = False
+autosummary_imported_members = False
 
 autodoc_default_options = {
-    "members": True,
-    "undoc-members": False,
-    "member-order": "bysource",
-    "show-inheritance": False,
-    "exclude-members": "__weakref__",
+    # 'members': True,
+    'no-undoc-members': True,
+    'member-order': 'groupwise',
+    # 'show-inheritance': False,
+    # 'recursive': True,
+    # 'special-members': '',  # don't expand magic methods
+    # 'inherited-members': False,  # < Fix pandas autodoc problem?
+    # 'exclude-members': '__weakref__',
 }
+autodoc_inherit_docstrings = False
 
 # Show type hints in description, PyTorch style
-autodoc_typehints = "description"
+autodoc_typehints = 'description'
 
 # ------------------------------------------------------------
 # Intersphinx links (optional but useful)
@@ -89,36 +93,42 @@ autodoc_typehints = "description"
 
 
 # ------------------------------------------------------------
-# Theme (choose ONE)
+# Theme
 # ------------------------------------------------------------
-html_theme = "furo"
-html_title = "SmartBot IRL"
+# html_theme = "furo"
+html_theme = 'pydata_sphinx_theme'
+html_title = 'SmartBot IRL'
 
 html_theme_options = {
-    "top_of_page_buttons": [],
+    # "top_of_page_buttons": [],
 }
 
 # ------------------------------------------------------------
 # HTML static files
 # ------------------------------------------------------------
-templates_path = ["_templates"]
-html_static_path = ["_static"]
+templates_path = ['_templates']
+html_static_path = ['_static']
+
+html_additional_pages = {
+    'index': 'index.html',
+}
+
 
 exclude_patterns = []
-
+autosummary_imported_members = True
 # ------------------------------------------------------------
 # Sitemap (if publishing)
 # ------------------------------------------------------------
-html_baseurl = "https://smartbots.wvirl.com"
+html_baseurl = 'https://smartbots.wvirl.com'
 sitemap_locales = [None]
-sitemap_excludes = ["search.html", "genindex.html"]
+sitemap_excludes = ['search.html', 'genindex.html']
 
 
-print("=== IMPORT TEST ===")
+print('=== IMPORT TEST ===')
 try:
     import smartbot_irl
 
-    print("OK: smartbot_irl imported")
+    print('OK: smartbot_irl imported')
 except Exception as e:
-    print("FAIL:", type(e).__name__, e)
-print("===================")
+    print('FAIL:', type(e).__name__, e)
+print('===================')

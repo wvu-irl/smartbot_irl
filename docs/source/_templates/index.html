@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% set title = "SmartBot IRL" %}
+
+{% block docs_navbar %}
+{{ super() }}
+
+<div class="sd-container-fluid py-4" style="background: var(--pst-color-background-secondary);">
+  <div class="sd-container">
+    <div class="sd-row">
+      <div class="sd-col-6">
+        <h1 class="sd-font-sans">SmartBot IRL</h1>
+        <h4 class="sd-font-italic">Unified Robotics API for Simulation and Real Robots</h4>
+        <a class="btn btn-primary" href="{{ pathto('tutorials/index') }}">Getting Started</a>
+        <a class="btn btn-secondary" href="{{ pathto('api/index') }}">API Reference</a>
+      </div>
+      <div class="sd-col-6">
+        <ul>
+          <li>Unified interface for real robots and Gazebo simulation</li>
+          <li>Typed Python API for robotics education & research</li>
+          <li>Built-in plotting, logging, and live visualization</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock docs_navbar %}
+
+{% block docs_main %}
+<div class="sd-container pt-5">
+  <h2>SmartBot IRL Components</h2>
+  <p>Use the cards below to navigate through key components:</p>
+
+  <div class="sd-row">
+    <div class="sd-col-4">
+      <div class="card">
+        <div class="card-body">
+          <h4><a href="{{ pathto('tutorials/index') }}">Tutorials</a></h4>
+          <p>Step-by-step examples.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-col-4">
+      <div class="card">
+        <div class="card-body">
+          <h4><a href="{{ pathto('api/index') }}">API Reference</a></h4>
+          <p>Full Python API generated from source.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-col-4">
+      <div class="card">
+        <div class="card-body">
+          <h4><a href="{{ pathto('user_manual/index') }}">User Manual</a></h4>
+          <p>Installation and usage guides.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock docs_main %}
+
