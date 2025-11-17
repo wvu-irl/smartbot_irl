@@ -45,7 +45,7 @@ To change between a simulated and real robot modify the "mode" string to be "rea
 <img src='docs/gifs/smartbot_real_run.gif' alt="TODO" style="max-width:700;  height:auto;">
 </details>
 
-# Using `smartbot_irl`
+## Using `smartbot_irl`
 
 The main classes in the `smartbot_irl` package are `SensorData`, `Command`, and
 `SmartBot`. In the example scripts we create an instance `bot` from the

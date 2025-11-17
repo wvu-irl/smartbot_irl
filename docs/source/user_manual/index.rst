@@ -17,5 +17,6 @@ The user manual will help you get started with using the SmartBots.
    connect_network
    installing_deps
    setup_workspace
+   setup_venv
    run_robot
 
