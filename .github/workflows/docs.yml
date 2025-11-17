@@ -26,8 +26,7 @@ jobs:
 
       - name: Install documentation dependencies
         run: |
-          pip install -r docs/requirements.txt
-          pip install .
+          pip install .[docs]
 
       - name: Build Sphinx HTML
         working-directory: docs

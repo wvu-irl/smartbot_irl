@@ -18,7 +18,7 @@ dependencies = [
 ]
 name = "smartbot-irl"
 version = "0.0.1"
-authors = [{ name = "Nathaniel pearson", email = "nate@nathanielp.com" }]
+authors = [{ name = "Nathaniel Pearson", email = "nate@nathanielp.com" }]
 description = "A small python wrapper over ROS2 interfaces for smartbot"
 readme = "README.md"
 requires-python = ">=3.12"
