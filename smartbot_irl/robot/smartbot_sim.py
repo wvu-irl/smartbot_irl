@@ -7,7 +7,7 @@ from ..data import JointState, SensorData, Command
 from ..drawing import Drawer
 from ..sim2d.engine import SimEngine
 from ..sim2d.sensors import SimSensors
-from smartbot_irl.utils import SmartLogger
+from ..utils import SmartLogger
 import logging
 
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
@@ -27,15 +27,15 @@ class SmartBotSim(SmartBotBase):
         self._running = False
 
     def init(self, **kwargs):
-        logger.info(msg="Connecting to smartbot...")
-        logger.info(msg="Connecting connected !")
+        logger.info(msg='Connecting to smartbot...')
+        logger.info(msg='Connecting connected !')
 
         self._running = True
         s = self.engine.state
 
         # Setup 2-wheel diff drive joint data
         s.joints = JointState()
-        s.joints.names = ["left_wheel", "right_wheel"]
+        s.joints.names = ['left_wheel', 'right_wheel']
         s.joints.positions = [0.0, 0.0]
         s.joints.velocities = [0.0, 0.0]
 
@@ -49,9 +49,9 @@ class SmartBotSim(SmartBotBase):
         scan.angle_max = math.pi
         scan.angle_increment = math.radians(5.0)
         num_rays = int((scan.angle_max - scan.angle_min) / scan.angle_increment)
-        scan.ranges = [float("inf")] * num_rays
+        scan.ranges = [float('inf')] * num_rays
 
-        print("SmartBotSim initialized")
+        print('SmartBotSim initialized')
 
     def place_hex(self, x=None, y=None):
         self.engine.place_hex(x, y)

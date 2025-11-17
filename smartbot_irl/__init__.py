@@ -1,5 +1,8 @@
-from . import robot
-from .robot import SmartBot
-from .data.data import SensorData, Command
+"""Package level pydoc for smartbot_irl.utils"""
 
-__all__ = ["robot", "SmartBot", "SensorData", "Command"]
+from .data import Command, SensorData
+from .robot import SmartBot, SmartBotType
+from . import robot, data, sim2d, utils
+
+
+__all__ = ['SmartBot', 'SensorData', 'Command', 'data', 'SmartBotType', 'robot', 'sim2d', 'utils']

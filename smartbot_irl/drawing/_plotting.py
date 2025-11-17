@@ -1,18 +1,15 @@
-from time import time, sleep
-from typing import List
+from time import time
+
 import matplotlib
 
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-from smartbot_irl.data import LaserScan, Frame, State, timestamp
+matplotlib.use('TkAgg')
 
-import threading
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
 # matplotlib.use("TkAgg")
 import pandas as pd
-import numpy as np
 from matplotlib.gridspec import GridSpec
 
 
@@ -21,7 +18,7 @@ class FigureWrapper:
         self.fig = plt.figure()
         self.axes = []
 
-        self._title = kwargs.pop("title", None)  # store it
+        self._title = kwargs.pop('title', None)  # store it
         if self._title:
             self.fig.suptitle(self._title)
 
@@ -34,7 +31,7 @@ class FigureWrapper:
     def _apply_fig_kwargs(self):
         """Applies kwargs to figure if figure has matching set_* methods."""
         for k, v in self._fig_kwargs.items():
-            setter = f"set_{k}"
+            setter = f'set_{k}'
             if hasattr(self.fig, setter):
                 getattr(self.fig, setter)(v)
             else:
@@ -62,7 +59,7 @@ class FigureWrapper:
     def _apply_kwargs(self, target, kwargs):
         """Applies kwargs to target if target has a matching set_* method."""
         for k, v in kwargs.items():
-            setter = f"set_{k}"
+            setter = f'set_{k}'
             if hasattr(target, setter):
                 getattr(target, setter)(v)
             else:
@@ -80,11 +77,11 @@ class FigureWrapper:
             # Convert numpy/pandas objects to python floats
             return [float(v) for v in yval]
 
-        raise TypeError(f"Unsupported y-value type: {type(yval)}")
+        raise TypeError(f'Unsupported y-value type: {type(yval)}')
 
     def add_line(self, x_col=None, y_col=None, window=1000, **kwargs):
         if y_col is None:
-            raise ValueError("y_col must be specified")
+            raise ValueError('y_col must be specified')
 
         # Always create a new subplot
         ax = self._new_subplot()
@@ -99,30 +96,30 @@ class FigureWrapper:
         axes_kwargs = {}
 
         for k, v in kwargs.items():
-            setter = f"set_{k}"
+            setter = f'set_{k}'
             if hasattr(ax, setter):
                 axes_kwargs[k] = v
             else:
                 artist_kwargs[k] = v
 
         # Extract label(s)
-        raw_labels = artist_kwargs.pop("labels", None)
+        raw_labels = artist_kwargs.pop('labels', None)
 
         if raw_labels is None:
             # No labels provided → auto-generate None for all
             labels = [None] * len(y_col_list)
         elif isinstance(raw_labels, list):
             if len(raw_labels) != len(y_col_list):
-                raise ValueError("label list length must match y_col list")
+                raise ValueError('label list length must match y_col list')
             labels = raw_labels
         else:
             # broadcast single label
             labels = [raw_labels] * len(y_col_list)
 
-        raw_color = artist_kwargs.pop("color", None)
+        raw_color = artist_kwargs.pop('color', None)
         if isinstance(raw_color, list):
             if len(raw_color) != len(y_col_list):
-                raise ValueError("color list length must match y_col list")
+                raise ValueError('color list length must match y_col list')
             colors = raw_color
         else:
             colors = [raw_color] * len(y_col_list)
@@ -131,9 +128,9 @@ class FigureWrapper:
         for lbl, col in zip(labels, colors):
             ak = dict(artist_kwargs)
             if col is not None:
-                ak["color"] = col
+                ak['color'] = col
             if lbl is not None:
-                ak["label"] = lbl
+                ak['label'] = lbl
 
             (line,) = ax.plot([], [], **ak)
             artists.append([line])
@@ -166,13 +163,13 @@ class FigureWrapper:
         self.fig.set_size_inches(10, 8, forward=True)
         self.fig.subplots_adjust(hspace=0.3)
 
-        self.items.append((ax, "line", artists, x_col, y_col_list, window, buffers))
+        self.items.append((ax, 'line', artists, x_col, y_col_list, window, buffers))
         return artists
 
     def add_scatter(self, x_col=None, y_col=None, window=1000, **kwargs):
         # For scatter, still create marker-style line2D objects
-        kwargs.setdefault("ls", "")
-        kwargs.setdefault("marker", "o")
+        kwargs.setdefault('ls', '')
+        kwargs.setdefault('marker', 'o')
         return self.add_line(x_col, y_col, window, **kwargs)
 
     def update(self, df_last_row: pd.Series):
@@ -193,13 +190,13 @@ class FigureWrapper:
                 elif isinstance(raw, (list, tuple, np.ndarray, pd.Series)):
                     yvals = [float(v) for v in raw]
                 else:
-                    raise TypeError(f"Column {ycol} has unsupported type {type(raw)}")
+                    raise TypeError(f'Column {ycol} has unsupported type {type(raw)}')
 
                 # Auto-expand if yvals is longer than existing lines
                 if len(yvals) > len(line_list):
                     extra = len(yvals) - len(line_list)
                     for k in range(extra):
-                        (new_line,) = ax.plot([], [], label=f"{ycol}[{len(line_list) + k}]")
+                        (new_line,) = ax.plot([], [], label=f'{ycol}[{len(line_list) + k}]')
                         line_list.append(new_line)
                         xbufs.append([])
                         ybufs.append([])
@@ -249,3 +246,6 @@ class PlotManager:
         for fw in self.figures:
             fw.update(data)
             fw.redraw_if_needed()
+
+    def show_plots(self) -> None:
+        plt.show(block=False)  # Make our plots appear.

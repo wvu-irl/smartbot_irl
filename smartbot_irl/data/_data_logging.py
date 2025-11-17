@@ -1,9 +1,11 @@
-#data_logging.py
+# data_logging.py
 from dataclasses import dataclass, field
 from datetime import datetime
 from time import time
 from types import SimpleNamespace
+
 import pandas as pd
+
 """
 This class should take a list of strings to make new columns for. Then it should
 offer intellisense for these columns. This will make it so students can
@@ -15,6 +17,8 @@ Pandas unfortunately does not have a good way to add extra attributes outside of
 the dataframe so we just shove them in with a class that wraps the dataframe
 proper.
 """
+
+
 @dataclass
 class State:
     state_vec: pd.DataFrame = field(init=False)
@@ -28,14 +32,14 @@ class State:
         #     "x", "y"  # if you want these to exist for plotting
         # ])
 
-        #TODO init first row in student code.
+        # TODO init first row in student code.
         seed = {
-            "t_epoch": time(),
-            "t": 0.0,
-            "time": 0.0,
-            "t_prev": time(),
-            "t_elapsed": 0.0,
-            "turning": False,
+            't_epoch': time(),
+            't': 0.0,
+            'time': 0.0,
+            't_prev': time(),
+            't_elapsed': 0.0,
+            'turning': False,
         }
         self.append_row(seed)
 
@@ -52,14 +56,13 @@ class State:
             if col not in self.state_vec.columns:
                 self.state_vec[col] = pd.NA
 
-
     @property
     def last(self) -> SimpleNamespace:
         return SimpleNamespace(**self.state_vec.iloc[-1].to_dict())
 
     def __getattr__(self, name):
         # Prevent recursion: if 'state_vec' is missing, raise
-        if name == "state_vec":
+        if name == 'state_vec':
             raise AttributeError
         return getattr(self.state_vec, name)
 
@@ -71,4 +74,4 @@ class State:
 
 
 def timestamp():
-    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return datetime.now().strftime('%Y-%m-%d_%H-%M-%S')

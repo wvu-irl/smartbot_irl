@@ -23,10 +23,10 @@ class SimEngine:
 
         # simple map: square arena, meters
         self.arena = {
-            "xmin": -5.0,
-            "xmax": 5.0,
-            "ymin": -5.0,
-            "ymax": 5.0,
+            'xmin': -5.0,
+            'xmax': 5.0,
+            'ymin': -5.0,
+            'ymax': 5.0,
         }
 
         self.markers: list[tuple[float, float]] = [(2.0, 2.0)]  # initial marker(s)
@@ -57,9 +57,9 @@ class SimEngine:
         s.manipulator_curr_preset = cmd.manipulator_presets
 
         if cmd.gripper_closed:
-            s.gripper_curr_state = "CLOSED"
+            s.gripper_curr_state = 'CLOSED'
         else:
-            s.gripper_curr_state = "OPEN"
+            s.gripper_curr_state = 'OPEN'
 
     # ------------------------------------------------------------------
     def step(self, dt: float | None = None) -> SensorData:
@@ -160,10 +160,10 @@ class SimEngine:
                 rx = x + r * math.cos(angle)
                 ry = y + r * math.sin(angle)
                 if (
-                    rx <= self.arena["xmin"]
-                    or rx >= self.arena["xmax"]
-                    or ry <= self.arena["ymin"]
-                    or ry >= self.arena["ymax"]
+                    rx <= self.arena['xmin']
+                    or rx >= self.arena['xmax']
+                    or ry <= self.arena['ymin']
+                    or ry >= self.arena['ymax']
                 ):
                     break
                 # Check obstacles
@@ -201,10 +201,10 @@ class SimEngine:
         def is_near_wall(px: float, py: float, wall_margin: float = 1) -> bool:
             """Check whether (px, py) is too close to the arena walls."""
             return (
-                (px - self.arena["xmin"]) < wall_margin
-                or (self.arena["xmax"] - px) < wall_margin
-                or (py - self.arena["ymin"]) < wall_margin
-                or (self.arena["ymax"] - py) < wall_margin
+                (px - self.arena['xmin']) < wall_margin
+                or (self.arena['xmax'] - px) < wall_margin
+                or (py - self.arena['ymin']) < wall_margin
+                or (self.arena['ymax'] - py) < wall_margin
             )
 
         # Robot position, used to avoid spawning too close
@@ -213,12 +213,12 @@ class SimEngine:
         if x is not None and y is not None:
             if is_inside_obstacle(x, y):
                 print(
-                    f"[WARN] Tried to place marker inside obstacle at ({x:.2f}, {y:.2f}), ignored."
+                    f'[WARN] Tried to place marker inside obstacle at ({x:.2f}, {y:.2f}), ignored.'
                 )
                 return
             if is_near_wall(x, y):
                 print(
-                    f"[WARN] Tried to place marker too close to wall at ({x:.2f}, {y:.2f}), ignored."
+                    f'[WARN] Tried to place marker too close to wall at ({x:.2f}, {y:.2f}), ignored.'
                 )
                 return
             self.markers = [(x, y)]
@@ -228,8 +228,8 @@ class SimEngine:
         max_attempts = 50
         buffer = 0.3
         for attempt in range(max_attempts):
-            x = random.uniform(self.arena["xmin"] + buffer, self.arena["xmax"] - buffer)
-            y = random.uniform(self.arena["ymin"] + buffer, self.arena["ymax"] - buffer)
+            x = random.uniform(self.arena['xmin'] + buffer, self.arena['xmax'] - buffer)
+            y = random.uniform(self.arena['ymin'] + buffer, self.arena['ymax'] - buffer)
 
             too_close_to_robot = math.hypot(x - rx, y - ry) < 0.5
             if is_inside_obstacle(x, y) or is_near_wall(x, y) or too_close_to_robot:
@@ -237,14 +237,14 @@ class SimEngine:
 
             # Valid spot
             self.markers = [(x, y)]
-            print(f"Placed hex at ({x:.2f}, {y:.2f}) after {attempt + 1} attempts")
+            print(f'Placed hex at ({x:.2f}, {y:.2f}) after {attempt + 1} attempts')
             return
 
-        print("[WARN] Failed to find obstacle-free location for marker after many attempts.")
+        print('[WARN] Failed to find obstacle-free location for marker after many attempts.')
 
     def _update_markers(self):
         """Compute marker poses relative to the robot body frame."""
-        from ..data.type_maps import Pose, PoseArray, ArucoMarkers
+        from ..data import Pose, PoseArray, ArucoMarkers
 
         s = self.state
         rx, ry, rtheta = s.odom.x, s.odom.y, s.odom.yaw

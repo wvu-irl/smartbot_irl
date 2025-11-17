@@ -1,19 +1,15 @@
-# data.py
-import os
-import time
-from dataclasses import dataclass, field, fields, is_dataclass
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, fields, is_dataclass
+from typing import Any, Dict, Optional
 
-from .type_maps import (
+from ._type_maps import (
     IMU,
     ArucoMarkers,
+    Bool,
     JointState,
     LaserScan,
+    Odometry,
     Pose,
     PoseArray,
-    Bool,
-    String,
-    Odometry,
     String,
 )
 
@@ -38,14 +34,14 @@ def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
     if is_dataclass(obj):
         for f in fields(obj):
             val = getattr(obj, f.name)
-            key = f"{prefix}_{f.name}"
+            key = f'{prefix}_{f.name}'
             flat.update(flatten_generic(key, val))
         return flat
 
     # Dict → expand key/value pairs
     if isinstance(obj, dict):
         for k, v in obj.items():
-            key = f"{prefix}_{k}"
+            key = f'{prefix}_{k}'
             flat.update(flatten_generic(key, v))
         return flat
 
@@ -79,7 +75,7 @@ class SensorData:
         self.seen_robots: PoseArray = PoseArray()
 
     @classmethod
-    def initialized(cls) -> "SensorData":
+    def initialized(cls) -> 'SensorData':
         """
         Return a new SensorData with all message objects constructed using
         their default constructors. Useful for simulation environments
@@ -102,32 +98,32 @@ class SensorData:
         """Convert only populated fields to ROS-like dicts."""
         d = {}
         if self.odom:
-            d["odom"] = self.odom.to_ros()
+            d['odom'] = self.odom.to_ros()
         if self.scan:
-            d["scan"] = self.scan.to_ros()
+            d['scan'] = self.scan.to_ros()
         if self.joints:
-            d["joints"] = self.joints.to_ros()
+            d['joints'] = self.joints.to_ros()
         if self.aruco_poses:
-            d["aruco_poses"] = self.aruco_poses.to_ros()
+            d['aruco_poses'] = self.aruco_poses.to_ros()
         if self.imu:
-            d["imu"] = self.imu.__dict__
+            d['imu'] = self.imu.__dict__
         if self.gripper_curr_state:
-            d["gripper_curr_state"] = self.gripper_curr_state.to_ros()
+            d['gripper_curr_state'] = self.gripper_curr_state.to_ros()
         if self.manipulator_curr_preset:
-            d["manipulator_curr_preset"] = self.manipulator_curr_preset.to_ros()
+            d['manipulator_curr_preset'] = self.manipulator_curr_preset.to_ros()
         if self.seen_hexes:
-            d["seen_hexes"] = self.seen_hexes.to_ros()
+            d['seen_hexes'] = self.seen_hexes.to_ros()
         if self.seen_robots:
-            d["seen_robots"] = self.seen_robots.to_ros()
+            d['seen_robots'] = self.seen_robots.to_ros()
         return d
 
     def __repr__(self):
         keys = [k for k, v in vars(self).items() if v is not None]
         missing = [k for k, v in vars(self).items() if v is None]
-        return f"SensorData(populated={keys}, missing={missing})"
+        return f'SensorData(populated={keys}, missing={missing})'
 
     def flatten(self) -> dict:
-        """Return a fully flattened dict of all sensor fields."""
+        """Return a partially flattened dict of all sensor fields."""
         out = {}
         for name, value in vars(self).items():
             out.update(flatten_generic(name, value))
@@ -161,17 +157,17 @@ class Command:
 
         # velocity command (Twist)
         if self.linear_vel is not None or self.angular_vel is not None:
-            msgs["geometry_msgs/Twist"] = {
-                "linear": {"x": self.linear_vel or 0.0, "y": 0.0, "z": 0.0},
-                "angular": {"x": 0.0, "y": 0.0, "z": self.angular_vel or 0.0},
+            msgs['geometry_msgs/Twist'] = {
+                'linear': {'x': self.linear_vel or 0.0, 'y': 0.0, 'z': 0.0},
+                'angular': {'x': 0.0, 'y': 0.0, 'z': self.angular_vel or 0.0},
             }
 
         # manipulator preset (String)
         if self.manipulator_presets is not None:
-            msgs["std_msgs/String"] = {"data": str(self.manipulator_presets)}
+            msgs['std_msgs/String'] = {'data': str(self.manipulator_presets)}
 
         # gripper state (Bool)
         if self.gripper_closed is not None:
-            msgs["std_msgs/Bool"] = {"data": bool(self.gripper_closed)}
+            msgs['std_msgs/Bool'] = {'data': bool(self.gripper_closed)}
 
         return msgs

@@ -7,4 +7,9 @@ This section contains step-by-step tutorials that show how to use SmartBot IRL i
    :maxdepth: 2
    :caption: Tutorials
 
-   getting_started
+   the_shell
+   installing_deps
+   setup_workspace
+   activating_robot
+   run_robot
+
