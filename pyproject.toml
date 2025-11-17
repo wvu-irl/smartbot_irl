@@ -14,7 +14,7 @@ dependencies = [
   'pygame',
   'scipy',
   'colorama',
-  'pandas'
+  'pandas',
 ]
 name = "smartbot-irl"
 version = "0.0.1"
@@ -38,3 +38,41 @@ where = ["."]
 [project.urls]
 Homepage = "https://github.com/pypa/sampleproject"
 Issues = "https://github.com/pypa/sampleproject/issues"
+
+[project.optional-dependencies]
+docs = [
+  'sphinx',
+  'myst-parser',
+  'furo',
+  'sphinx-design',
+  'numpy',
+  'scipy',
+  'matplotlib',
+  'pygame',
+  'pandas',
+  'roslibpy',
+  'jinja2',
+  'pyyaml',
+  'typeguard',
+  'colorama',
+  'sphinx-copybutton',
+  "scikit-image>=0.22.0",
+  "seaborn>=0.13.0",
+  "memory_profiler>=0.57.0",
+  "sphinx>=7.3.7",
+  "sphinx-gallery>=0.17.1",
+  "numpydoc>=1.2.0",
+  "Pillow>=10.1.0",
+  "pooch>=1.8.0",
+  "sphinx-prompt>=1.4.0",
+  "sphinxext-opengraph>=0.9.1",
+  "plotly>=5.18.0",
+  "polars>=0.20.30",
+  "sphinx-design>=0.6.0",
+  "sphinxcontrib-sass>=0.3.4",
+  "sphinx-remove-toctrees>=1.0.0.post1",
+  "sphinx-mermaid",
+  "sphinxcontrib-mermaid",
+  "pydata-sphinx-theme",
+  "sphinx-autobuild",
+]
