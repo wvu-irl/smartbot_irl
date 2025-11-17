@@ -1,8 +1,11 @@
+.. automodule:: {{ fullname }}
+   :no-members:
+   :undoc-members:
+   :show-inheritance:
+
 {{ doc }}
 
 {{ fullname | escape | underline }}
-
-
 
 {% if modules %}
 Subpackages
@@ -26,14 +29,6 @@ Functions
 {% for f in functions %}
    {{ fullname }}.{{ f }}
 {% endfor %}
-
-.. rubric:: Function Details
-
-{% for f in functions %}
-.. _{{ fullname }}.{{ f }}:
-
-.. autofunction:: {{ fullname }}.{{ f }}
-{% endfor %}
 {% endif %}
 
 {% if classes %}
@@ -45,17 +40,6 @@ Classes
    :toctree: none
 {% for c in classes %}
    {{ fullname }}.{{ c }}
-{% endfor %}
-
-.. rubric:: Class Details
-
-{% for c in classes %}
-.. _{{ fullname }}.{{ c }}:
-
-.. autoclass:: {{ fullname }}.{{ c }}
-   :members:
-   :show-inheritance:
-
 {% endfor %}
 {% endif %}
 
@@ -69,9 +53,35 @@ Attributes
 {% for a in attributes %}
    {{ fullname }}.{{ a }}
 {% endfor %}
+{% endif %}
 
+{# -- Start Detail Blocks -- #}
+
+{% if functions %}
+.. rubric:: Function Details
+{% for f in functions %}
+.. _{{ fullname }}.{{ f }}:
+
+.. autofunction:: {{ fullname }}.{{ f }}
+
+{% endfor %}
+{% endif %}
+
+{% if classes %}
+.. rubric:: Class Details
+{% for c in classes %}
+.. _{{ fullname }}.{{ c }}:
+
+.. autoclass:: {{ fullname }}.{{ c }}
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+{% endfor %}
+{% endif %}
+
+{% if attributes %}
 .. rubric:: Attribute Details
-
 {% for a in attributes %}
 .. _{{ fullname }}.{{ a }}:
 
@@ -79,4 +89,3 @@ Attributes
 
 {% endfor %}
 {% endif %}
-
