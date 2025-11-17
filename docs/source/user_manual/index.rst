@@ -14,6 +14,7 @@ The user manual will help you get started with using the SmartBots.
    :maxdepth: 2
    :caption: SmartBot Software
 
+   connect_network
    installing_deps
    setup_workspace
    run_robot

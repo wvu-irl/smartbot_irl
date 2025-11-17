@@ -1,6 +1,9 @@
 # Running the Robot
-
 Once we have our workspace setup and dependencies installed we are ready to make the robot do something!
+
+```{contents} Table of Contents
+:depth: 3
+```
 
 ## Start hardware interface on the robot
 

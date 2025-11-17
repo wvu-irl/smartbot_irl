@@ -1,6 +1,10 @@
 # Running Code
 
-> Before running code we must [activate the robot](#activating-robot)!
+```{contents} Table of Contents
+:depth: 3
+```
+
+Before running code we must [activate the robot](#activating-robot)!
 
 There are a few demo programs included in `src/`. You should add your scripts here as well. Let's try and run the teleop example. If we open it in the editor we can click the small "Play" button at the top right. If our venv is created correctly and we have installed all the dependencies a PyGame window should appear. Arrow keys will move the robot. The `PGUP/PGDOWN` keys will open/close the gripper. The keys `b/n/m` will cycle the arm through the DOWN/STOW/HOLD positions.
 

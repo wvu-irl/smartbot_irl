@@ -1,5 +1,9 @@
 # Activating Your Robot
 
+```{contents} Table of Contents
+:depth: 3
+```
+
 Before controlling the robot we must perform several steps.
 
 - Powering On the Robot

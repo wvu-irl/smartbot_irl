@@ -1,17 +1,9 @@
 # Setting Up Your Workspace
+This document will help you setup your personal computer to control the SmartBots
 
 ```{contents} Table of Contents
 :depth: 3
 ```
-
-In this document we will:
-- Clone the repo using git
-- Open the `smartbot3_project_template` folder in VSCode
-- Install workspace recommended extensions
-- Open a VSCode terminal (shell)
-- Create a python [virtual environment](https://peps.python.org/pep-0405/) (venv)
-- Install python dependencies and the python package `smartbot_irl` (included as
-  a subrepo(submodule) inside the repo) into the virtual environment
 
 ## Clone the repo using git
 

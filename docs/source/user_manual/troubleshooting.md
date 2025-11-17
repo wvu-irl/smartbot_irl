@@ -1,5 +1,9 @@
 # Troubleshooting
 
+```{contents} Table of Contents
+:depth: 3
+```
+
 ## The dir `smartbot_irl` is empty!
 
 Try running the following inside of your project repo

@@ -1,8 +1,16 @@
 # Installing System Dependencies
 
 Your computer must have some minimal software packages installed before the
-SmartBots can be used. Linux and windows are both supported. A mainstream Linux distro is
-recommended since windows will require more troubleshooting and is generally difficult to work with.
+SmartBots can be used. Linux and windows are both supported.
+
+:::{note}
+A mainstream Linux distro is
+preferred since windows will require more troubleshooting and is generally difficult to work with.
+:::
+
+```{contents} Table of Contents
+:depth: 3
+```
 
 ## Linux
 
@@ -36,7 +44,6 @@ python --version
 ```
 
 which should report `Python 3.12.10`.
-
 
 ## Windows
 
@@ -78,22 +85,13 @@ Then install **python3.12** using the Python Install Manager by running the foll
 ```bash
 py install 3.12
 ```
-
 <img src="../_static/images/win_py_install.png" style="max-width:600px; height:auto;">
 
 See the following gif for details if you are confused.
 
-<!-- <img src='docs/gifs/win_py_install.gif' style="width:800;  height:auto;"> -->
-
-<div style="max-width: 100%; overflow-x: auto;">
+<div class="video-card">
   <video controls style="width: 100%; height: auto;" poster="../_static/gifs/demo_preview.gif">
     <source src="../_static/videos/win_py_install.webm" type="video/webm">
-  </video>
-</div>
-
-<div style="max-width: 100%; overflow-x: auto;">
-  <video controls style="width: 100%; height: auto;" poster="../_static/gifs/demo_preview.gif">
-    <source src="../_static/videos/py_install.webm" type="video/webm">
   </video>
 </div>
 
