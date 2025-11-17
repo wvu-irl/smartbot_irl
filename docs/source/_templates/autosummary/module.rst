@@ -13,7 +13,7 @@ Subpackages
 
 .. autosummary::
    :nosignatures:
-   :toctree: none
+   :toctree: .
 {% for m in modules %}
    {{ fullname }}.{{ m }}
 {% endfor %}
@@ -25,7 +25,6 @@ Functions
 
 .. autosummary::
    :nosignatures:
-   :toctree: none
 {% for f in functions %}
    {{ fullname }}.{{ f }}
 {% endfor %}
@@ -37,7 +36,6 @@ Classes
 
 .. autosummary::
    :nosignatures:
-   :toctree: none
 {% for c in classes %}
    {{ fullname }}.{{ c }}
 {% endfor %}
@@ -49,7 +47,6 @@ Attributes
 
 .. autosummary::
    :nosignatures:
-   :toctree: none
 {% for a in attributes %}
    {{ fullname }}.{{ a }}
 {% endfor %}

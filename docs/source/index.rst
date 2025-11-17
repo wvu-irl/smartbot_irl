@@ -5,8 +5,11 @@ Smartbot IRL documentation
    :maxdepth: 2
    :hidden:
 
-   tutorials/index
    user_manual/index
+   tutorials/index
    api/index
+   troubleshooting/index
    glossary/index
+   feedback/index
+
 

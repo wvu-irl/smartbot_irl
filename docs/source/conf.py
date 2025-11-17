@@ -99,10 +99,24 @@ autodoc_typehints = 'description'
 html_theme = 'pydata_sphinx_theme'
 html_title = 'SmartBot IRL'
 
-html_theme_options = {
-    # "top_of_page_buttons": [],
-}
+html_logo = '_static/logos/irl_logo_big.png'  # fallback for both modes
 
+html_theme_options = {
+    # 'navbar_align': 'content',
+    'show_toc_level': 2,  # Show 2 levels of headings in the sidebar
+    'navigation_depth': 2,
+    'collapse_navigation': False,
+    'sidebar': {
+        'navigation_with_keys': True,
+    },
+    'logo': {
+        'image_light': '_static/logos/irl_logo_big.png',
+        'image_dark': '_static/logos/irl_logo_big.png',
+        'text': 'SmartBot IRL',  # optional if you want to show title
+        'alt_text': 'SmartBot IRL - Home',
+        'link': 'index',  # optional; default goes to root_doc
+    },
+}
 # ------------------------------------------------------------
 # HTML static files
 # ------------------------------------------------------------
@@ -113,7 +127,6 @@ html_css_files = ['css/custom.css']
 html_additional_pages = {
     'index': 'index.html',
 }
-
 
 exclude_patterns = []
 autosummary_imported_members = True

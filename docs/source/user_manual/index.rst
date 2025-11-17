@@ -7,5 +7,9 @@ The user manual provides detailed reference material for installing, configuring
    :maxdepth: 2
    :caption: User Manual
 
-   installation
-   troubleshooting
+   the_shell
+   installing_deps
+   setup_workspace
+   activating_robot
+   run_robot
+

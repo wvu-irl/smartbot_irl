@@ -1,3 +1,18 @@
+/* Increase overall width of page while keeping centered layout */
+.bd-page-width {
+    max-width: 1600px; /* default is usually ~1200px */
+    width: 95%;
+    margin: 0 auto;
+}
+
+/* Let the main content use more horizontal space */
+.bd-content .bd-article-container {
+    max-width: 100%;
+    width: 100%;
+}
+
+
+
 /* ========= Shared Box Styling ========= */
 
 dl.py.function,
@@ -20,7 +35,7 @@ dl.py.attribute > dt {
     font-weight: 700;
     font-size: 1.0em;
     padding: 0.1em 0.75em;
-    margin: -3.5em -1.2em 0.6em -1.2em;
+    margin: -1.2em -1.2em 0.6em -1.2em;
     border-bottom: 1px solid var(--pst-color-border);
     border-radius: 6px 6px 0 0;
     white-space: pre-wrap;
