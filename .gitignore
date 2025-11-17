@@ -390,8 +390,6 @@ dkms.conf
 docs/source/api/generated/
 docs/source/api/generated/**
 
-# Ignore autosummary index file
-docs/source/api/index.rst
 
 # Ignore Sphinx doctrees and build
 docs/_build/
