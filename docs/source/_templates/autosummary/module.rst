@@ -9,7 +9,7 @@
 
 {% if modules %}
 Subpackages
------------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -21,7 +21,7 @@ Subpackages
 
 {% if functions %}
 Functions
----------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -33,7 +33,7 @@ Functions
 
 {% if classes %}
 Classes
--------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -45,7 +45,7 @@ Classes
 
 {% if attributes %}
 Attributes
-----------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -58,7 +58,9 @@ Attributes
 {# -- Start Detail Blocks -- #}
 
 {% if functions %}
-.. rubric:: Function Details
+
+Function Details
+-------
 {% for f in functions %}
 .. _{{ fullname }}.{{ f }}:
 
@@ -68,7 +70,9 @@ Attributes
 {% endif %}
 
 {% if classes %}
-.. rubric:: Class Details
+
+Class Details
+-------
 {% for c in classes %}
 .. _{{ fullname }}.{{ c }}:
 
@@ -81,7 +85,9 @@ Attributes
 {% endif %}
 
 {% if attributes %}
-.. rubric:: Attribute Details
+
+Attribute Details
+-------
 {% for a in attributes %}
 .. _{{ fullname }}.{{ a }}:
 

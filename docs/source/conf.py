@@ -108,6 +108,7 @@ html_theme_options = {
 # ------------------------------------------------------------
 templates_path = ['_templates']
 html_static_path = ['_static']
+html_css_files = ['css/custom.css']
 
 html_additional_pages = {
     'index': 'index.html',

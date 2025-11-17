@@ -12,7 +12,7 @@ smartbot\_irl
 
 
 Functions
----------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -24,7 +24,7 @@ Functions
 
 
 Classes
--------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -41,7 +41,9 @@ Classes
 
 
 
-.. rubric:: Function Details
+
+Function Details
+-------
 
 .. _smartbot_irl.SmartBot:
 
@@ -51,7 +53,9 @@ Classes
 
 
 
-.. rubric:: Class Details
+
+Class Details
+-------
 
 .. _smartbot_irl.SensorData:
 

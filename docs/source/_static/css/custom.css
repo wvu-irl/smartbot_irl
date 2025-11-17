@@ -1,0 +1,85 @@
+/* ========= Shared Box Styling ========= */
+
+dl.py.function,
+dl.py.class,
+dl.py.attribute {
+    margin: 2em 0;
+    padding: 3.5em 1.2em 0.5em;
+    border-left: 4px solid var(--pst-color-primary);
+    border-radius: 6px;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* ========= Header Bar Styling ========= */
+
+dl.py.function > dt,
+dl.py.class > dt,
+dl.py.attribute > dt {
+    font-weight: 700;
+    font-size: 1.0em;
+    padding: 0.1em 0.75em;
+    margin: -3.5em -1.2em 0.6em -1.2em;
+    border-bottom: 1px solid var(--pst-color-border);
+    border-radius: 6px 6px 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ========= Light Mode Theme Overrides ========= */
+html[data-theme="light"] dl.py.function,
+html[data-theme="light"] dl.py.class,
+html[data-theme="light"] dl.py.attribute {
+    background-color: #fcfcfc;
+    border-left-color: #0066cc;
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.07),
+        0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] dl.py.function > dt,
+html[data-theme="light"] dl.py.class > dt,
+html[data-theme="light"] dl.py.attribute > dt {
+    background-color: #eef6ff;
+    color: #003366;
+}
+
+/* ========= Dark Mode Theme Overrides ========= */
+html[data-theme="dark"] dl.py.function,
+html[data-theme="dark"] dl.py.class,
+html[data-theme="dark"] dl.py.attribute {
+    background-color: #181a1b;
+    border-left-color: #4fa3ff;
+    box-shadow:
+        0 1px 2px rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] dl.py.function > dt,
+html[data-theme="dark"] dl.py.class > dt,
+html[data-theme="dark"] dl.py.attribute > dt {
+    background-color: #202324;
+    color: #9ecbff;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+/* ========= Inside Class Body: spacing between method/attr blocks ========= */
+dl.py.class dd > dl.py.method,
+dl.py.class dd > dl.py.attribute {
+    margin-top: 1.2em;
+    margin-left: 1.5em;
+}
+
+/* ========= Field list (Parameters, Returns, etc.) styling ========= */
+dl.field-list > dt {
+    font-weight: 300;
+    font-size: 1.0em;
+    color: var(--pst-color-text-base);
+    margin-bottom: 0.4em;
+}
+
+dl.field-list > dd {
+    margin-bottom: .4em;
+    line-height: 1.6;
+}

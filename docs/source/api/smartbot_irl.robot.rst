@@ -12,7 +12,7 @@ smartbot\_irl.robot
 
 
 Functions
----------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -29,7 +29,9 @@ Functions
 
 
 
-.. rubric:: Function Details
+
+Function Details
+-------
 
 .. _smartbot_irl.robot.SmartBot:
 

@@ -12,7 +12,7 @@ smartbot\_irl.data
 
 
 Functions
----------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -26,7 +26,7 @@ Functions
 
 
 Classes
--------
+==========
 
 .. autosummary::
    :nosignatures:
@@ -55,7 +55,9 @@ Classes
 
 
 
-.. rubric:: Function Details
+
+Function Details
+-------
 
 .. _smartbot_irl.data.list_sensor_columns:
 
@@ -70,7 +72,9 @@ Classes
 
 
 
-.. rubric:: Class Details
+
+Class Details
+-------
 
 .. _smartbot_irl.data.ArucoMarkers:
 
