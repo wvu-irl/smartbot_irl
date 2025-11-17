@@ -11,7 +11,6 @@ Before the robot will respond to commands the hardware interface code _on the ro
 
 ### Start hardware interface with VSCode task
 
-<details open>
 
 If the "Fast Tasks" extension was installed then several buttons will be available in the "Explorer" pane which will automate the process of starting the robot.
 
@@ -27,7 +26,6 @@ If the "Fast Tasks" extension was installed then several buttons will be availab
 
 ### Start hardware interface with shell
 
-<details vscopt>
 Rather than using the VSCode task we can manually invoke the shell/powershell scripts that connect to the robot.
 
 For linux:
