@@ -356,13 +356,13 @@ class PlotManager:
         logger.warn('Joining child proc...')
 
         # 3. Give child time to exit cleanly
-        self.plot_proc.join(timeout=1.0)
+        self.plot_proc.join(timeout=0.3)
 
         # 4. If still alive → terminate
         if self.plot_proc.is_alive():
             logger.warn('Terminating child proc...')
             self.plot_proc.terminate()
-            self.plot_proc.join(timeout=0.5)
+            self.plot_proc.join(timeout=0.3)
 
     def show_plots(self) -> None:
         plt.show(block=False)  # Make our plots appear.

@@ -1,8 +1,6 @@
-import threading
-import time
 import math
 import pygame
-from typing import Callable, Optional
+from typing import Callable
 from ..data import SensorData
 
 
@@ -26,6 +24,7 @@ class Drawer:
         """
         self._get = sensor_getter
         self.scale = scale
+        self.show_hud = True
 
         (xmin, xmax), (ymin, ymax) = region
         self.xmin, self.xmax = xmin, xmax
@@ -50,9 +49,9 @@ class Drawer:
 
         pygame.init()
         self.screen = pygame.display.set_mode((win_w, win_h))
-        pygame.display.set_caption("SmartBot Viewer")
+        pygame.display.set_caption('SmartBot Viewer')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont("monospace", 16)
+        self.font = pygame.font.SysFont('monospace', 16)
         self._running = True
 
     def world_to_screen(self, x, y):
@@ -72,7 +71,7 @@ class Drawer:
         scan = d.scan
         # Check if we have received an odometry message yet.
         if d is None or d.odom is None or d.scan is None:
-            print("waiting for odom and scan...")
+            print('waiting for odom and scan...')
             return
         x, y, theta = d.odom.x, d.odom.y, d.odom.yaw
 
@@ -127,7 +126,7 @@ class Drawer:
                 pygame.draw.rect(
                     self.screen, (255, 180, 0), pygame.Rect(mx - 6, my - 6, 12, 12), 7
                 )
-                label = self.font.render(f"{id}", True, (255, 163, 33))
+                label = self.font.render(f'{id}', True, (255, 163, 33))
                 self.screen.blit(label, (mx + 8, my))
 
         # Draw robot body
@@ -138,13 +137,83 @@ class Drawer:
         hy = cy - int(0.5 * self.scale * math.sin(theta))
         pygame.draw.line(self.screen, (255, 50, 50), (cx, cy), (hx, hy), 3)
 
-        # Draw text overlay
-        pose_str = f"x={x:+.2f}  y={y:+.2f}  θ={theta:+.2f}"
-        text_surf = self.font.render(pose_str, True, (180, 180, 180))
-        self.screen.blit(text_surf, (10, 10))
+        if self.show_hud:
+            instructions = (
+                'Controls:\n'
+                '  ↑ ↓ : Forward / Back\n'
+                '  ← → : Rotate\n'
+                '  B/N/M : Arm presets\n'
+                '  h   : Toggle menus\n'
+                '  q   : Quit'
+            )
+
+            draw_text_block(
+                self.screen,
+                instructions,
+                pos=(10, 10),
+                font=self.font,
+                color=(230, 230, 230),
+                bg_color=(40, 40, 40),  # soft dark background
+                line_spacing=2,
+                padding=8,
+            )
+            state_str = f'Pose:\n  x={x:+.2f}\n  y={y:+.2f}\n  theta={theta:+.2f}\n  Gripper{d.gripper_curr_state}\n  Manipulator{d.manipulator_curr_preset}'
+
+            draw_text_block(
+                self.screen,
+                state_str,
+                pos=(400, 10),
+                font=self.font,
+                color=(200, 200, 200),
+                bg_color=(20, 20, 20),
+            )
 
         pygame.display.flip()
         self.clock.tick(int(1 / dt))
 
     def quit(self):
         pygame.quit()
+
+
+def draw_text_block(
+    surface,
+    text_lines,
+    pos=(10, 10),
+    font=None,
+    color=(220, 220, 220),
+    line_spacing=4,
+    bg_color=None,
+    padding=6,
+):
+    """
+    Draw a block of multi-line text with optional background.
+
+    text_lines: list[str] or a single string with '\n'
+    """
+    if isinstance(text_lines, str):
+        text_lines = text_lines.split('\n')
+
+    if font is None:
+        raise ValueError('Font must be supplied')
+
+    x, y = pos
+
+    # Compute total height for block background
+    rendered = [font.render(line, True, color) for line in text_lines]
+    widths = [surf.get_width() for surf in rendered]
+    heights = [surf.get_height() for surf in rendered]
+
+    block_w = max(widths) + 2 * padding
+    block_h = sum(heights) + line_spacing * (len(heights) - 1) + 2 * padding
+
+    # Draw background rectangle if requested
+    if bg_color is not None:
+        pygame.draw.rect(surface, bg_color, (x, y, block_w, block_h), border_radius=6)
+
+    # Draw text lines
+    tx = x + padding
+    ty = y + padding
+
+    for surf in rendered:
+        surface.blit(surf, (tx, ty))
+        ty += surf.get_height() + line_spacing
