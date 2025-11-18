@@ -22,6 +22,8 @@ class SmartBotSim(SmartBotBase):
         self.engine.add_obstacle(-2.0, 2.0, 0.5, 0.5)
         self.engine.add_obstacle(-3.0, -2.0, 0.1, 2.5)
 
+        self.cam_fov = 70
+
         self.sensor_data = self.engine.read_all()  # start with engine’s data
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False

@@ -4,6 +4,7 @@ from math import cos, sin
 import time
 from dataclasses import dataclass
 from ..data import Command, SensorData
+from ..data import Pose, PoseArray, ArucoMarkers
 
 
 class SimEngine:
@@ -21,6 +22,7 @@ class SimEngine:
         self._last_vy = 0.0
         self.vx_body = 0.0
         self.prev_vx_body = 0.0
+        self.cam_fov = 70
 
         self.obstacles: list[tuple[float, float, float, float]] = []
 
@@ -203,6 +205,15 @@ class SimEngine:
                 r += step
             scan.ranges[i] = min(r, max_range)
 
+    def is_inside_obstacle(self, px: float, py: float, margin: float = 1) -> bool:
+        """Check whether (px, py) is inside or too close to any obstacle."""
+        for xmin, xmax, ymin, ymax in self.obstacles:
+            if (xmin - margin) <= px <= (xmax + margin) and (ymin - margin) <= py <= (
+                ymax + margin
+            ):
+                return True
+        return False
+
     def place_hex(self, x: float | None = None, y: float | None = None):
         """Place a new simulated marker in the world at (x, y) or a random obstacle-free location.
 
@@ -214,15 +225,6 @@ class SimEngine:
             _type_: _description_
         """
         import random
-
-        def is_inside_obstacle(px: float, py: float, margin: float = 1) -> bool:
-            """Check whether (px, py) is inside or too close to any obstacle."""
-            for xmin, xmax, ymin, ymax in self.obstacles:
-                if (xmin - margin) <= px <= (xmax + margin) and (ymin - margin) <= py <= (
-                    ymax + margin
-                ):
-                    return True
-            return False
 
         def is_near_wall(px: float, py: float, wall_margin: float = 1) -> bool:
             """Check whether (px, py) is too close to the arena walls."""
@@ -237,7 +239,7 @@ class SimEngine:
         rx, ry = self.state.odom.x, self.state.odom.y
 
         if x is not None and y is not None:
-            if is_inside_obstacle(x, y):
+            if self.is_inside_obstacle(x, y):
                 print(
                     f'[WARN] Tried to place marker inside obstacle at ({x:.2f}, {y:.2f}), ignored.'
                 )
@@ -258,7 +260,7 @@ class SimEngine:
             y = random.uniform(self.arena['ymin'] + buffer, self.arena['ymax'] - buffer)
 
             too_close_to_robot = math.hypot(x - rx, y - ry) < 0.5
-            if is_inside_obstacle(x, y) or is_near_wall(x, y) or too_close_to_robot:
+            if self.is_inside_obstacle(x, y) or is_near_wall(x, y) or too_close_to_robot:
                 continue
 
             # Valid spot
@@ -269,19 +271,70 @@ class SimEngine:
         print('[WARN] Failed to find obstacle-free location for marker after many attempts.')
 
     def _update_markers(self):
-        """Compute marker poses relative to the robot body frame."""
-        from ..data import Pose, PoseArray, ArucoMarkers
+        """Compute marker poses relative to the robot body frame.
+
+        Use robots current pose and apply its cone of vision to get a list of
+        see-able markers not behind an obstacle.
+        """
+
+        # Half-angle in radians
+        half_fov = math.radians(self.cam_fov / 2)
+        max_range = 6.0  # detection limit
+
+        rel_poses = []
 
         s = self.state
         rx, ry, rtheta = s.odom.x, s.odom.y, s.odom.yaw
 
         rel_poses = []
         for mx, my in self.markers:
+            # Check if in cone
+
+            # check if obstacle in way.
+
+            # append to rel_poses
             dx = mx - rx
             dy = my - ry
             # Transform from world to robot frame
             rel_x = math.cos(-rtheta) * dx - math.sin(-rtheta) * dy
             rel_y = math.sin(-rtheta) * dx + math.cos(-rtheta) * dy
+
+            # Robot-frame polar coords
+            ang = math.atan2(rel_y, rel_x)
+            dist = math.hypot(rel_x, rel_y)
+
+            # Reject behind or outside FOV
+            if dist > max_range:
+                continue
+            if abs(ang) > half_fov:
+                continue
+
+            # ---------------------------------------------------------
+            # Obstacle occlusion check
+            # Simple ray test from robot → marker in small steps
+            # ---------------------------------------------------------
+            occluded = False
+            steps = int(dist / 0.05)
+            if steps < 1:
+                steps = 1
+
+            for i in range(1, steps):
+                t = i / steps
+                px = rx + t * dx
+                py = ry + t * dy
+
+                # Test against obstacles
+                for xmin, xmax, ymin, ymax in self.obstacles:
+                    if xmin <= px <= xmax and ymin <= py <= ymax:
+                        occluded = True
+                        break
+
+                if occluded:
+                    break
+
+            if occluded:
+                continue
+
             rel_poses.append(Pose(x=rel_x, y=rel_y, z=0.0))
         s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=[48] * len(rel_poses))
 
