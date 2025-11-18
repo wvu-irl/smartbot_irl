@@ -69,6 +69,7 @@ class SmartBotSim(SmartBotBase):
         self.read()  # Update sensor data.
         if self.drawer and self.drawer._running:
             self.drawer.draw_once(dt)
+
         # time.sleep(dt)
 
     def shutdown(self):

@@ -23,7 +23,7 @@ STOP_SIGNAL = 'STOP'
 
 
 class FigureWrapper:
-    def __init__(self, max_fps=60, **kwargs):
+    def __init__(self, max_fps=30, **kwargs):
         self.fig = plt.figure()
         self.axes = []
 
@@ -89,7 +89,7 @@ class FigureWrapper:
 
         raise TypeError(f'Unsupported y-value type: {type(yval)}')
 
-    def add_line(self, x_col=None, y_col=None, window=1000, **kwargs):
+    def add_line(self, x_col=None, y_col=None, window=30, **kwargs):
         if y_col is None:
             raise ValueError('y_col must be specified')
 
@@ -269,10 +269,16 @@ class PlotManager:
 
     def __init__(self, leave_plots=False):
         self.figures: list[FigureWrapper] = []
-        self.data_queue = Queue(maxsize=1)
+        # self.data_queue = Queue(maxsize=1)
+        from multiprocessing import Manager
+
+        self.manager = Manager()
+        self.buffer = self.manager.list()  # shared list
+        self.buffer_max = 16  # ring size
+
         self.leave_plots = leave_plots
 
-    def add_figure(self, max_fps=60, **kwargs):
+    def add_figure(self, max_fps=30, **kwargs):
         fw = FigureWrapper(max_fps=max_fps, **kwargs)
         self.figures.append(fw)
         return fw
@@ -282,12 +288,19 @@ class PlotManager:
             fw.update(df_last_row=data)
             fw.redraw_if_needed()
 
+        # def update_queue(self, data: pd.Series):
+        #     """Append series to data queue"""
+        #     try:
+        #         self.data_queue.put_nowait(data)
+        #     except queue.Full:
+        #         pass
+
     def update_queue(self, data: pd.Series):
-        """Append series to data queue"""
-        try:
-            self.data_queue.put_nowait(data)
-        except queue.Full:
-            pass
+        buf = self.buffer
+        # evict oldest if at capacity
+        if len(buf) >= self.buffer_max:
+            buf.pop(0)
+        buf.append(data)
 
     def draw_plots(self, data_queue: Queue, figs: list[Figure]):
         """To be called as a new process."""
@@ -299,11 +312,18 @@ class PlotManager:
         plt.show(block=False)  # Make our plots appear.
         while True:
             # Get data from queue
-            try:
-                data = data_queue.get(timeout=0.05)
-            except queue.Empty:
+            # try:
+            #     data = data_queue.get(timeout=0.02)
+            # except queue.Empty:
+            #     plt.pause(0.001)
+            #     continue
+
+            # Pull oldest item if available
+            if len(self.buffer) == 0:
                 plt.pause(0.001)
                 continue
+
+            data = self.buffer.pop(0)
 
             # Catch stop signal from queue.
             if type(data) is str and data == STOP_SIGNAL:
@@ -326,7 +346,8 @@ class PlotManager:
             plt.close()
 
     def start_plot_proc(self):
-        self.plot_proc = Process(target=self.draw_plots, args=(self.data_queue, self.figures))
+        # self.plot_proc = Process(target=self.draw_plots, args=(self.data_queue, self.figures))
+        self.plot_proc = Process(target=self.draw_plots, args=(None, self.figures))
 
         # try:
         self.plot_proc.start()
@@ -341,9 +362,10 @@ class PlotManager:
     def stop_plot_proc(self):
         # 1. Flush the queue completely
         try:
-            while True:
-                self.data_queue.get_nowait()
-                logger.warn('Flushed queue once')
+            # while True:
+            #     self.data_queue.get_nowait()
+            #     logger.warn('Flushed queue once')
+            self.buffer[:] = []  # clear ring buffer
         except Exception:
             pass
 

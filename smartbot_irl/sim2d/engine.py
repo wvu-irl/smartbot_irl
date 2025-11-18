@@ -1,5 +1,6 @@
 # engine.py
 import math
+from math import cos, sin
 import time
 from dataclasses import dataclass
 from ..data import Command, SensorData
@@ -14,10 +15,12 @@ class SimEngine:
 
     def __init__(self, wheel_base: float = 0.3):
         self.wheel_base = wheel_base
-        self.last_t = time.time()
+        # self.last_t = time.time()
         self.state = SensorData.initialized()  # holds all simulated values
         self._last_vx = 0.0
         self._last_vy = 0.0
+        self.vx_body = 0.0
+        self.prev_vx_body = 0.0
 
         self.obstacles: list[tuple[float, float, float, float]] = []
 
@@ -35,6 +38,8 @@ class SimEngine:
     def apply_command(self, cmd: Command) -> None:
         """Apply a Command instance to the simulated robot.
 
+        Wheel velocity is treated as a perfect instant command.
+
         Args:
             cmd (Command): _description_
         """
@@ -46,14 +51,23 @@ class SimEngine:
         wr = cmd.wheel_vel_right or 0.0
 
         if cmd.linear_vel is not None or cmd.angular_vel is not None:
+            # Twist commands are in body frame.
             wl = lin - 0.5 * self.wheel_base * ang
             wr = lin + 0.5 * self.wheel_base * ang
 
         s.joints.velocities[0] = wl
         s.joints.velocities[1] = wr
 
-        s.odom.vx = (wl + wr) / 2.0
-        s.odom.wz = (wr - wl) / self.wheel_base
+        # Zero-slip differential drive kinematic model (body frame).
+        # self.vx_body = (wl + wr) / 2.0
+
+        # # Put in odom frame.
+        # s.odom.vx = cos(s.odom.yaw) * self.vx_body
+        # s.odom.vy = sin(s.odom.yaw) * self.vx_body
+
+        # # Already in odom frame?
+        # s.odom.wz = (wr - wl) / self.wheel_base
+
         s.manipulator_curr_preset = cmd.manipulator_presets
 
         if cmd.gripper_closed:
@@ -62,7 +76,7 @@ class SimEngine:
             s.gripper_curr_state = 'OPEN'
 
     # ------------------------------------------------------------------
-    def step(self, dt: float | None = None) -> SensorData:
+    def step(self, dt: float) -> SensorData:
         """Integrate robot motion forward by dt and return updated SensorData.
 
         Args:
@@ -71,17 +85,36 @@ class SimEngine:
         Returns:
             SensorData: _description_
         """
-        now = time.time()
-        if dt is None:
-            dt = now - self.last_t
-        self.last_t = now
+        # now = time.time()
+        # if dt is None:
+        #     dt = now - self.last_t
+        # self.last_t = now
 
         s = self.state
+        wl = s.joints.velocities[0]
+        wr = s.joints.velocities[1]
 
-        # Integrate pose
+        # Zero-slip differential drive kinematic model (body frame).
+        self.prev_vx_body = self.vx_body
+        ideal_vel = (wl + wr) / 2.0
+
+        # first-order dynamics
+        alpha = dt / (0.2 + dt)
+        self.prev_vx_body = self.vx_body
+        self.vx_body = (1 - alpha) * self.vx_body + alpha * ideal_vel
+
+        # Put lin vel in odom frame.
+        s.odom.vx = cos(s.odom.yaw) * self.vx_body
+        s.odom.vy = sin(s.odom.yaw) * self.vx_body
+
+        # Ang vel in odom frame.
+        s.odom.wz = (wr - wl) / self.wheel_base
+
+        # Integrate pose (odom frame).
+        # Odom is perfect true simulator pos.
         s.odom.yaw += s.odom.wz * dt
-        s.odom.x += s.odom.vx * math.cos(s.odom.yaw) * dt
-        s.odom.y += s.odom.vx * math.sin(s.odom.yaw) * dt
+        s.odom.x += s.odom.vx * dt
+        s.odom.y += s.odom.vy * dt
 
         # Update wheel positions
         # s.joints.positions += s.joints.velocities * dt
@@ -91,6 +124,7 @@ class SimEngine:
             s.odom.yaw -= 2 * math.pi
         elif s.odom.yaw < -math.pi:
             s.odom.yaw += 2 * math.pi
+
         # Update synthetic sensor readings
         self._update_lidar()
         self._update_markers()
@@ -111,28 +145,20 @@ class SimEngine:
         half_w, half_h = w / 2.0, h / 2.0
         self.obstacles.append((x - half_w, x + half_w, y - half_h, y + half_h))
 
-    def _update_imu(self, dt: float):
+    def _update_imu(
+        self,
+        dt: float,
+    ):
         s = self.state
 
-        # angular velocity (gyroscope)
+        # angular velocity (gyroscope). Yoink from odom (true state).
         gyro_z = s.odom.wz
 
-        # compute linear accel by differentiating velocity
-        # world-frame derivatives
-        vx = s.odom.vx * math.cos(s.odom.yaw)
-        vy = s.odom.vx * math.sin(s.odom.yaw)
+        # Just use our simulator's vx from wheel vels.
+        ax = (self.vx_body - self.prev_vx_body) / dt if dt > 1e-6 else 0.0
 
-        ax_world = (vx - self._last_vx) / dt if dt > 1e-6 else 0.0
-        ay_world = (vy - self._last_vy) / dt if dt > 1e-6 else 0.0
-
-        self._last_vx = vx
-        self._last_vy = vy
-
-        # transform accel to robot frame
-        cy = math.cos(-s.odom.yaw)
-        sy = math.sin(-s.odom.yaw)
-        accel_x = cy * ax_world - sy * ay_world
-        accel_y = sy * ax_world + cy * ay_world
+        # centripetal ay.
+        ay = self.vx_body * s.odom.wz  # centripetal accel
 
         # add a bit of sensor noise
         import random
@@ -140,8 +166,8 @@ class SimEngine:
         noise = lambda s: s + random.gauss(0, 0.02)
 
         s.imu.wz = noise(gyro_z)
-        s.imu.ax = noise(accel_x)
-        s.imu.ay = noise(accel_y)
+        s.imu.ax = noise(ax)
+        s.imu.ay = noise(ay)
 
     def _update_lidar(self):
         """Populate self.state.scan with simulated range readings."""
@@ -264,4 +290,4 @@ class SimEngine:
 
     def reset(self):
         self.state = SensorData()
-        self.last_t = time.time()
+        # self.last_t = time.time()
