@@ -1,20 +1,29 @@
-from time import time
+import queue
+from socket import timeout
+from time import time, sleep
 
 import matplotlib
+from multiprocessing import Process, Queue
+
+from smartbot_irl.utils import SmartLogger, logging
 
 matplotlib.use('TkAgg')
 
-import matplotlib
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
+
+logger = SmartLogger(level=logging.CRITICAL)  # Print statements, but better!
 
 # matplotlib.use("TkAgg")
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
+STOP_SIGNAL = 'STOP'
+
 
 class FigureWrapper:
-    def __init__(self, max_fps=20, **kwargs):
+    def __init__(self, max_fps=60, **kwargs):
         self.fig = plt.figure()
         self.axes = []
 
@@ -40,12 +49,13 @@ class FigureWrapper:
     from matplotlib.gridspec import GridSpec
 
     def _new_subplot(self):
+        # TODO handle remaking subplots without breaking legends.
         n = len(self.axes) + 1
 
         # Build a new gridspec with n rows
         gs = GridSpec(n, 1, figure=self.fig)
 
-        # Reassign ALL EXISTING axes to their correct grid position
+        # Reassign existing axes to their correct grid position
         for i, ax in enumerate(self.axes):
             ax.set_subplotspec(gs[i, 0])
             ax.set_position(gs[i, 0].get_position(self.fig))
@@ -135,17 +145,6 @@ class FigureWrapper:
             (line,) = ax.plot([], [], **ak)
             artists.append([line])
 
-        # artists = []
-        # for lbl, col in zip(labels, colors):
-        #     ak = dict(artist_kwargs)
-        #     if col is not None:
-        #         ak["color"] = col
-        #     if lbl is not None:
-        #         ak["label"] = lbl
-
-        #     (line,) = ax.plot([], [], **ak)
-        #     artists.append(line)
-
         # Apply axes kwargs
         if axes_kwargs:
             self._apply_kwargs(ax, axes_kwargs)
@@ -172,7 +171,7 @@ class FigureWrapper:
         kwargs.setdefault('marker', 'o')
         return self.add_line(x_col, y_col, window, **kwargs)
 
-    def update(self, df_last_row: pd.Series):
+    def update(self, df_last_row: pd.Series) -> None:
         for ax, kind, artists, x_col, y_col_list, window, buffers in self.items:
             # Compute x once
             xval = df_last_row.name if x_col is None else df_last_row[x_col]
@@ -216,9 +215,41 @@ class FigureWrapper:
                         yb.pop(0)
 
                     line_list[j].set_data(xb, yb)
+            # Calc X and Y limits
+            xmin = float('inf')
+            xmax = float('-inf')
+            ymin = float('inf')
+            ymax = float('-inf')
 
-            ax.relim()
-            ax.autoscale_view()
+            for xbufs_i, ybufs_i in buffers:
+                for xb in xbufs_i:
+                    if xb:
+                        vmin = min(xb)
+                        vmax = max(xb)
+
+                        if vmin < xmin:
+                            xmin = vmin
+                        if vmax > xmax:
+                            xmax = vmax
+
+                for yb in ybufs_i:
+                    if yb:
+                        vmin = min(yb)
+                        vmax = max(yb)
+                        if vmin < ymin:
+                            ymin = vmin
+                        if vmax > ymax:
+                            ymax = vmax
+
+            if xmin < xmax and xmin != float('inf'):
+                span = xmax - xmin
+                xpad = 0.05 * span if span > 0 else 1.0
+                ax.set_xlim(xmin - xpad, xmax + xpad)
+
+            if ymin < ymax and ymin != float('inf'):
+                span = ymax - ymin
+                ypad = 0.05 * span if span > 0 else 1
+                ax.set_ylim(ymin - ypad, ymax + ypad)
 
     def update_all(self, new_row):
         for fw in self.figures:
@@ -234,18 +265,110 @@ class FigureWrapper:
 
 
 class PlotManager:
-    def __init__(self):
-        self.figures = []
+    """Spawns process to handle matplotlib plotting."""
+
+    def __init__(self, leave_plots=False):
+        self.figures: list[FigureWrapper] = []
+        self.data_queue = Queue(maxsize=1)
+        self.leave_plots = leave_plots
 
     def add_figure(self, max_fps=60, **kwargs):
         fw = FigureWrapper(max_fps=max_fps, **kwargs)
         self.figures.append(fw)
         return fw
 
-    def update_all(self, data):
+    def update_all(self, data: pd.Series) -> None:
         for fw in self.figures:
-            fw.update(data)
+            fw.update(df_last_row=data)
             fw.redraw_if_needed()
+
+    def update_queue(self, data: pd.Series):
+        """Append series to data queue"""
+        try:
+            self.data_queue.put_nowait(data)
+        except queue.Full:
+            pass
+
+    def draw_plots(self, data_queue: Queue, figs: list[Figure]):
+        """To be called as a new process."""
+        import signal as _signal
+
+        # Ignore SIGINT in the plot process so Tk never sees KeyboardInterrupt.
+        _signal.signal(_signal.SIGINT, _signal.SIG_IGN)
+
+        plt.show(block=False)  # Make our plots appear.
+        while True:
+            # Get data from queue
+            try:
+                data = data_queue.get(timeout=0.05)
+            except queue.Empty:
+                plt.pause(0.001)
+                continue
+
+            # Catch stop signal from queue.
+            if type(data) is str and data == STOP_SIGNAL:
+                logger.warn('got STOP signal')
+                break
+
+            # Redraw plots
+            for fw in figs:
+                fw.update(df_last_row=data)
+                fw.redraw_if_needed()
+            # logger.warn('Looping draw')
+            # sleep(0.001)
+
+        if self.leave_plots:
+            logger.info('Leaving plots open')
+            plt.ioff()
+            plt.show()
+        else:
+            logger.info('Closing plots')
+            plt.close()
+
+    def start_plot_proc(self):
+        self.plot_proc = Process(target=self.draw_plots, args=(self.data_queue, self.figures))
+
+        # try:
+        self.plot_proc.start()
+        # except KeyboardInterrupt:
+        #     logger.info('Stopping plot process...')
+        # except Exception as e:
+        #     logger.info('Crash!')
+        # finally:
+        #     plot_proc.kill()
+        #     plot_proc.close()
+
+    def stop_plot_proc(self):
+        # 1. Flush the queue completely
+        try:
+            while True:
+                self.data_queue.get_nowait()
+                logger.warn('Flushed queue once')
+        except Exception:
+            pass
+
+        # 2. Send STOP
+        try:
+            logger.info('Sending stop to plot process...')
+            self.data_queue.put_nowait(STOP_SIGNAL)
+        except Exception:
+            pass
+        logger.warn('Joining child proc...')
+
+        # 3. Give child time to exit cleanly
+        self.plot_proc.join(timeout=1.0)
+
+        # 4. If still alive → terminate
+        if self.plot_proc.is_alive():
+            logger.warn('Terminating child proc...')
+            self.plot_proc.terminate()
+            self.plot_proc.join(timeout=0.5)
 
     def show_plots(self) -> None:
         plt.show(block=False)  # Make our plots appear.
+
+    # self.plot_proc.start()
+    # self.plot_proc.join()
+
+
+def start_plot_proc(pm: PlotManager): ...
