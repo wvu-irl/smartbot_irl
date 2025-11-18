@@ -1,4 +1,9 @@
 from .smart_logging import SmartLogger, check_realtime
-import logging
+from .data_saving import get_log_dir, save_data
+import logging  # noqa: F401
 
-__all__ = ['SmartLogger', 'check_realtime']
+__all__ = [
+    'SmartLogger',
+    'check_realtime',
+    'get_log_dir',
+]
