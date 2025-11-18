@@ -6,7 +6,8 @@ import math
 from ..data import JointState, SensorData, Command
 from ..drawing import Drawer
 from ..sim2d.engine import SimEngine
-from ..sim2d.sensors import SimSensors
+
+# from ..sim2d.sensors import SimSensors
 from ..utils import SmartLogger
 import logging
 
@@ -14,7 +15,7 @@ logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
 
 class SmartBotSim(SmartBotBase):
-    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))):
+    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))) -> None:
         super().__init__(drawing=drawing, draw_region=draw_region)
         self.engine = SimEngine()
 
@@ -28,7 +29,7 @@ class SmartBotSim(SmartBotBase):
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
 
-    def init(self, **kwargs):
+    def init(self, **kwargs) -> None:
         logger.info(msg='Connecting to smartbot...')
         logger.info(msg='Connecting connected !')
 
@@ -55,10 +56,10 @@ class SmartBotSim(SmartBotBase):
 
         print('SmartBotSim initialized')
 
-    def place_hex(self, x=None, y=None):
+    def place_hex(self, x=None, y=None) -> None:
         self.engine.place_hex(x, y)
 
-    def write(self, cmd: Command):
+    def write(self, cmd: Command) -> None:
         self.engine.apply_command(cmd)
 
     def read(self) -> SensorData:
@@ -66,15 +67,13 @@ class SmartBotSim(SmartBotBase):
         self.sensor_data = self.engine.read_all()
         return self.sensor_data
 
-    def spin(self, dt: float = 0.05):
+    def spin(self, dt: float = 0.05) -> None:
         self.engine.step(dt)
         self.read()  # Update sensor data.
         if self.drawer and self.drawer._running:
             self.drawer.draw_once(dt)
 
-        # time.sleep(dt)
-
-    def shutdown(self):
+    def shutdown(self) -> None:
         r"""
         Clean up roslibpy and pygame objects.
         """

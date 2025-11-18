@@ -39,7 +39,7 @@ class SmartBotReal(SmartBotBase):
     """
 
     # def __init__(self, drawing=(), smartbot_num=0,) -> None:
-    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))):
+    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))) -> None:
         super().__init__(drawing=drawing, draw_region=draw_region)
 
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
@@ -131,28 +131,28 @@ class SmartBotReal(SmartBotBase):
             )
         print(f'Subscribers and publishers found for {prefix}/* topics')
 
-    def place_hex(self, x=None, y=None):
-        """Place a new hex marker at a random or specified world position."""
-        if not self.client or not self.client.is_connected:
-            print('Cannot place hex: ROSBridge not connected.')
-            return
+    # def place_hex(self, x=None, y=None):
+    #     """Place a new hex marker at a random or specified world position."""
+    #     if not self.client or not self.client.is_connected:
+    #         print('Cannot place hex: ROSBridge not connected.')
+    #         return
 
-        if x is None or y is None:
-            # randomize within a 3x3 meter box centered at origin
-            import random
+    #     if x is None or y is None:
+    #         # randomize within a 3x3 meter box centered at origin
+    #         import random
 
-            x = random.uniform(-3.0, 3.0)
-            y = random.uniform(-3.0, 3.0)
+    #         x = random.uniform(-3.0, 3.0)
+    #         y = random.uniform(-3.0, 3.0)
 
-        msg = {
-            'position': {'x': float(x), 'y': float(y), 'z': 0.0},
-            'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
-        }
-        self.place_hex_pub.publish(roslibpy.Message(msg))
-        print(f'Placed hex at ({x:.2f}, {y:.2f})')
+    #     msg = {
+    #         'position': {'x': float(x), 'y': float(y), 'z': 0.0},
+    #         'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
+    #     }
+    #     self.place_hex_pub.publish(roslibpy.Message(msg))
+    #     print(f'Placed hex at ({x:.2f}, {y:.2f})')
 
     # Publish messages.
-    def write(self, cmd: Command):
+    def write(self, cmd: Command) -> None:
         """Publish the contents of :param:`cmd` to Ros2.
 
         Args:
