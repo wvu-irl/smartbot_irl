@@ -1,3 +1,3 @@
 from .engine import SimEngine
 
-__all__ = []
+__all__ = ['SimEngine']

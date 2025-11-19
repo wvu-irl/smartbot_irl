@@ -5,7 +5,7 @@ import time
 import math
 from ..data import JointState, SensorData, Command
 from ..drawing import Drawer
-from ..sim2d.engine import SimEngine
+from ..sim2d import SimEngine
 
 # from ..sim2d.sensors import SimSensors
 from ..utils import SmartLogger
@@ -61,9 +61,6 @@ class SmartBotSim(SmartBotBase):
         scan.ranges = [float('inf')] * num_rays
 
         print('SmartBotSim initialized')
-
-    # def place_hex(self, x=None, y=None) -> None:
-    #     self.engine.place_hex(x, y)
 
     def write(self, cmd: Command) -> None:
         self.engine.apply_command(cmd)

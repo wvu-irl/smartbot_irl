@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from ..data import Command, SensorData
 from ..data import Pose, PoseArray, ArucoMarkers
 
+# from ..robot import SmartBotType
+import random
+
 
 class SimEngine:
     """Simple 2D differential-drive sim.
@@ -87,10 +90,6 @@ class SimEngine:
         Returns:
             SensorData: _description_
         """
-        # now = time.time()
-        # if dt is None:
-        #     dt = now - self.last_t
-        # self.last_t = now
 
         s = self.state
         wl = s.joints.velocities[0]
@@ -163,8 +162,6 @@ class SimEngine:
         ay = self.vx_body * s.odom.wz  # centripetal accel
 
         # add a bit of sensor noise
-        import random
-
         noise = lambda s: s + random.gauss(0, 0.02)
 
         s.imu.wz = noise(gyro_z)
@@ -180,6 +177,7 @@ class SimEngine:
 
         max_range = 4.0  # meters
         step = 0.05  # meters per step along ray
+        noise = lambda s: s + random.gauss(0, 0.1)
 
         for i in range(N):
             angle = theta + scan.angle_min + i * scan.angle_increment
@@ -202,7 +200,7 @@ class SimEngine:
                         break
                 if hit:
                     break
-                r += step
+                r += noise(step)
             scan.ranges[i] = min(r, max_range)
 
     def is_inside_obstacle(self, px: float, py: float, margin: float = 1) -> bool:
@@ -288,11 +286,6 @@ class SimEngine:
 
         rel_poses = []
         for mx, my in self.markers:
-            # Check if in cone
-
-            # check if obstacle in way.
-
-            # append to rel_poses
             dx = mx - rx
             dy = my - ry
             # Transform from world to robot frame
@@ -309,10 +302,7 @@ class SimEngine:
             if abs(ang) > half_fov:
                 continue
 
-            # ---------------------------------------------------------
-            # Obstacle occlusion check
-            # Simple ray test from robot → marker in small steps
-            # ---------------------------------------------------------
+            # Check if occluded.
             occluded = False
             steps = int(dist / 0.05)
             if steps < 1:
