@@ -8,7 +8,7 @@ import yaml
 
 from .smartbot_base import SmartBotBase
 from ..data._converters import ROS_TYPE_MAP
-from ..data._type_maps import (
+from ..data import (
     ArucoMarkers,
     Odometry,
     LaserScan,
@@ -141,7 +141,7 @@ class SmartBotReal(SmartBotBase):
         for name, (cls, field_name) in self._topic_map.items():
             topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
             topic.subscribe(
-                lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c.from_ros(msg))
+                lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c._from_ros(msg))
             )
         print(f'Subscribers and publishers found for {prefix}/* topics')
 

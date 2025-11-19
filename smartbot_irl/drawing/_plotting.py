@@ -81,7 +81,7 @@ class FigureWrapper:
         Accepts scalars, lists, numpy arrays, pandas Series.
         """
         if np.isscalar(yval):
-            return [float(yval)]
+            return [float(yval)]  # pyright: ignore[reportArgumentType]
 
         if isinstance(yval, (list, tuple, np.ndarray, pd.Series)):
             # Convert numpy/pandas objects to python floats
@@ -185,7 +185,7 @@ class FigureWrapper:
 
                 # Normalize input into a list of floats
                 if np.isscalar(raw):
-                    yvals = [float(raw)]
+                    yvals = [float(raw)]  # pyright: ignore[reportArgumentType]
                 elif isinstance(raw, (list, tuple, np.ndarray, pd.Series)):
                     yvals = [float(v) for v in raw]
                 else:
@@ -302,7 +302,7 @@ class PlotManager:
             buf.pop(0)
         buf.append(data)
 
-    def draw_plots(self, data_queue: Queue, figs: list[Figure]):
+    def draw_plots(self, data_queue: Queue, figs: list[FigureWrapper]):
         """To be called as a new process."""
         import signal as _signal
 
@@ -316,16 +316,19 @@ class PlotManager:
                 plt.pause(0.01)
                 continue
 
-            data = self.buffer.pop(0)
+            data: pd.Series | str = self.buffer.pop(0)
 
             # Catch stop signal from queue.
             if type(data) is str and data == STOP_SIGNAL:
                 logger.warn('got STOP signal')
                 break
+            # else:
+            # data: pd.Series
 
             # Redraw plots
             for fw in figs:
-                fw.update(df_last_row=data)
+                # TODO fix type warning...
+                fw.update(df_last_row=data)  # pyright: ignore[reportArgumentType]
                 fw.redraw_if_needed()
             # logger.warn('Looping draw')
             sleep(0.001)
