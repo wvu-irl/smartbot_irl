@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from ..data import Command, SensorData
 from ..data import Pose, PoseArray, ArucoMarkers
+from .utils import make_arena
 
 # from ..robot import SmartBotType
 import random
@@ -26,18 +27,23 @@ class SimEngine:
         self.vx_body = 0.0
         self.prev_vx_body = 0.0
         self.cam_fov = 70
+        self.lidar_max_range = 10
 
         self.obstacles: list[tuple[float, float, float, float]] = []
 
         # simple map: square arena, meters
+        height = 8
+        width = 8
         self.arena = {
-            'xmin': -50.0,
-            'xmax': 50.0,
-            'ymin': -50.0,
-            'ymax': 50.0,
+            'xmin': -width,
+            'xmax': width,
+            'ymin': -height,
+            'ymax': height,
         }
+        self.add_obstacles(make_arena(width, height))
 
-        self.markers: list[tuple[float, float]] = []  # initial marker(s)
+        self.markers: list[tuple[int, float, float]] = []
+        self._next_marker_id = 0
 
     # ------------------------------------------------------------------
     def apply_command(self, cmd: Command) -> None:
@@ -194,24 +200,16 @@ class SimEngine:
         N = len(scan.ranges)
         x, y, theta = s.odom.x, s.odom.y, s.odom.yaw
 
-        max_range = 4.0  # meters
         step = 0.01  # meters per step along ray
         noise = lambda s: s + random.gauss(0, 0.1)
 
         for i in range(N):
             angle = theta + scan.angle_min + i * scan.angle_increment
             r = 0.0
-            while r < max_range:
+            while r < self.lidar_max_range:
                 rx = x + r * math.cos(angle)
                 ry = y + r * math.sin(angle)
-                # if (
-                #     rx <= self.arena['xmin']
-                #     or rx >= self.arena['xmax']
-                #     or ry <= self.arena['ymin']
-                #     or ry >= self.arena['ymax']
-                # ):
-                #     break
-                # Check obstacles
+
                 hit = False
                 for xmin, xmax, ymin, ymax in self.obstacles:
                     if xmin <= rx <= xmax and ymin <= ry <= ymax:
@@ -220,7 +218,7 @@ class SimEngine:
                 if hit:
                     break
                 r += noise(step)
-            scan.ranges[i] = min(r, max_range)
+            scan.ranges[i] = min(r, self.lidar_max_range)
 
     def is_inside_obstacle(self, px: float, py: float, margin: float = 1) -> bool:
         """Check whether (px, py) is inside or too close to any obstacle."""
@@ -231,7 +229,7 @@ class SimEngine:
                 return True
         return False
 
-    def place_hex(self, x: float | None = None, y: float | None = None):
+    def place_hex(self, x: float | None = None, y: float | None = None) -> None:
         """Place a new simulated marker in the world at (x, y) or a random obstacle-free location.
 
         Args:
@@ -266,7 +264,7 @@ class SimEngine:
                     f'[WARN] Tried to place marker too close to wall at ({x:.2f}, {y:.2f}), ignored.'
                 )
                 return
-            self.markers = [(x, y)]
+
             return
 
         # --- Random placement with obstacle rejection ---
@@ -281,7 +279,9 @@ class SimEngine:
                 continue
 
             # Valid spot
-            self.markers = [(x, y)]
+            self._next_marker_id += 1
+            self.markers.append((self._next_marker_id, x, y))
+
             print(f'Placed hex at ({x:.2f}, {y:.2f}) after {attempt + 1} attempts')
             return
 
@@ -299,12 +299,12 @@ class SimEngine:
         max_range = 6.0  # detection limit
 
         rel_poses = []
+        rel_ids = []
 
         s = self.state
         rx, ry, rtheta = s.odom.x, s.odom.y, s.odom.yaw
 
-        rel_poses = []
-        for mx, my in self.markers:
+        for mid, mx, my in self.markers:
             dx = mx - rx
             dy = my - ry
             # Transform from world to robot frame
@@ -345,7 +345,8 @@ class SimEngine:
                 continue
 
             rel_poses.append(Pose(x=rel_x, y=rel_y, z=0.0))
-        s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=[48] * len(rel_poses))
+            rel_ids.append(mid)
+        s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=rel_ids)
 
     def read_all(self):
         return self.state

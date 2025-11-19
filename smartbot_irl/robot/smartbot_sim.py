@@ -71,6 +71,8 @@ class SmartBotSim(SmartBotBase):
         return self.sensor_data
 
     def spin(self, dt: float = 0.05) -> None:
+        if dt < 1e6:
+            dt = 0.01
         self.engine.step(dt)
         self.read()  # Update sensor data.
         if self.drawer and self.drawer._running:

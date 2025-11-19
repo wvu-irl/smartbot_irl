@@ -1,7 +1,11 @@
 from pathlib import Path
+
+from smartbot_irl.utils.smart_logging import SmartLogger, logging
 from ..data._data_logging import timestamp
 from ..data import State
 import sys
+
+logger = SmartLogger(level=logging.WARN)  # Print statements, but better!
 
 
 def get_log_dir(log_dir_name='smart_logs') -> Path:
@@ -21,5 +25,6 @@ def save_data(states: State, params, log_filename='smart') -> Path:
     log_path = log_dir / (log_filename + f'_{timestamp()}.csv')
 
     states.to_csv(log_path)
+    logger.info(f'Saved data in {log_path}')
 
     return log_path
