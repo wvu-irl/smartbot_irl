@@ -31,13 +31,13 @@ class SimEngine:
 
         # simple map: square arena, meters
         self.arena = {
-            'xmin': -5.0,
-            'xmax': 5.0,
-            'ymin': -5.0,
-            'ymax': 5.0,
+            'xmin': -50.0,
+            'xmax': 50.0,
+            'ymin': -50.0,
+            'ymax': 50.0,
         }
 
-        self.markers: list[tuple[float, float]] = [(2.0, 2.0)]  # initial marker(s)
+        self.markers: list[tuple[float, float]] = []  # initial marker(s)
 
     # ------------------------------------------------------------------
     def apply_command(self, cmd: Command) -> None:
@@ -133,18 +133,37 @@ class SimEngine:
 
         return s
 
-    def add_obstacle(self, x: float, y: float, w: float, h: float) -> None:
-        """Add an axis-aligned rectangular obstacle centered at (x, y).
+    def add_obstacles(self, coords: list[float] | list[list[float]]) -> None:
+        """Add one or more obstacles defined by two opposite corners.
 
-        Args:
-            x (float): _description_
-            y (float): _description_
-            w (float): _description_
-            h (float): _description_
+        Parameters
+        ----------
+        coords : list[float] or list[list[float]]
+            Either:
+                [x1, y1, x2, y2]
+            or:
+                [[x1, y1, x2, y2], [...], ...]
         """
 
-        half_w, half_h = w / 2.0, h / 2.0
-        self.obstacles.append((x - half_w, x + half_w, y - half_h, y + half_h))
+        # Normalize to a list of lists.
+        if isinstance(coords[0], (int, float)):
+            rects = [coords]  # single rectangle
+        else:
+            rects = coords  # list of rectangles
+        rects: list  # TODO less stupid fix.
+
+        for rect in rects:
+            if len(rect) != 4:
+                raise ValueError('Each obstacle must be a list of four floats: [x1, y1, x2, y2]')
+
+            x1, y1, x2, y2 = rect
+
+            xmin = min(x1, x2)
+            xmax = max(x1, x2)
+            ymin = min(y1, y2)
+            ymax = max(y1, y2)
+
+            self.obstacles.append((xmin, xmax, ymin, ymax))
 
     def _update_imu(
         self,
@@ -176,7 +195,7 @@ class SimEngine:
         x, y, theta = s.odom.x, s.odom.y, s.odom.yaw
 
         max_range = 4.0  # meters
-        step = 0.05  # meters per step along ray
+        step = 0.01  # meters per step along ray
         noise = lambda s: s + random.gauss(0, 0.1)
 
         for i in range(N):
@@ -185,13 +204,13 @@ class SimEngine:
             while r < max_range:
                 rx = x + r * math.cos(angle)
                 ry = y + r * math.sin(angle)
-                if (
-                    rx <= self.arena['xmin']
-                    or rx >= self.arena['xmax']
-                    or ry <= self.arena['ymin']
-                    or ry >= self.arena['ymax']
-                ):
-                    break
+                # if (
+                #     rx <= self.arena['xmin']
+                #     or rx >= self.arena['xmax']
+                #     or ry <= self.arena['ymin']
+                #     or ry >= self.arena['ymax']
+                # ):
+                #     break
                 # Check obstacles
                 hit = False
                 for xmin, xmax, ymin, ymax in self.obstacles:
