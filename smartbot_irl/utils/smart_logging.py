@@ -4,6 +4,8 @@ import time
 from time import time
 from typing import Any
 import sys
+import pprint
+
 from colorama import init as colorama_init
 
 
@@ -13,20 +15,20 @@ colorama_init(strip=not sys.stdout.isatty())
 class RegexRateLimitFilter(logging.Filter):
     """Rate limit specific log messages using regex to match similar base strings"""
 
-    _FLOAT_RE = re.compile(r"-?\d+\.\d+")
-    _INT_RE = re.compile(r"\b\d+\b")
+    _FLOAT_RE = re.compile(r'-?\d+\.\d+')
+    _INT_RE = re.compile(r'\b\d+\b')
 
     def __init__(self):
         super().__init__()
         self._last_emit: dict[str, float] = {}
 
     def _normalize(self, msg: str) -> str:
-        msg = self._FLOAT_RE.sub("*", msg)
-        msg = self._INT_RE.sub("*", msg)
+        msg = self._FLOAT_RE.sub('*', msg)
+        msg = self._INT_RE.sub('*', msg)
         return msg
 
     def filter(self, record: logging.LogRecord) -> bool:
-        rate = getattr(record, "_rate_limit_interval", 0.0)
+        rate = getattr(record, '_rate_limit_interval', 0.0)
         if rate <= 0.0:
             return True
 
@@ -44,17 +46,17 @@ class ColorFormatter(logging.Formatter):
     """Inject ANSI colors into log levelnames."""
 
     COLORS = {
-        logging.DEBUG: "\033[36m",  # cyan
-        logging.INFO: "\033[32m",  # green
-        logging.WARNING: "\033[33m",  # yellow
-        logging.ERROR: "\033[31m",  # red
-        logging.CRITICAL: "\033[1;35m",  # bold magenta
+        logging.DEBUG: '\033[36m',  # cyan
+        logging.INFO: '\033[32m',  # green
+        logging.WARNING: '\033[33m',  # yellow
+        logging.ERROR: '\033[31m',  # red
+        logging.CRITICAL: '\033[1;35m',  # bold magenta
     }
-    RESET = "\033[0m"
+    RESET = '\033[0m'
 
     def format(self, record: logging.LogRecord) -> str:
-        color = self.COLORS.get(record.levelno, "")
-        record.levelname = f"{color}{record.levelname}{self.RESET}"
+        color = self.COLORS.get(record.levelno, '')
+        record.levelname = f'{color}{record.levelname}{self.RESET}'
         return super().format(record)
 
 
@@ -89,24 +91,28 @@ class SmartLogger:
         * :mod:`logging`-- Pythons standard logging library.
     """
 
-    def __init__(self, name: str = "smartbot", level: int = logging.INFO):
+    def __init__(self, name: str = 'smartbot', level: int = logging.INFO):
         self._logger = logging.getLogger(name)
         if not self._logger.handlers:  # avoid duplicate handlers
             handler = logging.StreamHandler()
-            fmt = "[%(asctime)s] %(levelname)s: %(message)s"
+            fmt = '[%(asctime)s] %(levelname)s: %(message)s'
             handler.setFormatter(ColorFormatter(fmt))
             self._logger.addHandler(handler)
         self._logger.setLevel(level)
         self._logger.addFilter(RegexRateLimitFilter())
 
-    def log(self, msg: Any, *, rate: float = 0.0, level: int = logging.INFO):
+    def log(self, msg: Any, *, rate: float = 0.0, level: int = logging.INFO, pretty=True):
         try:
-            msg_str = '\n'+str(msg)
+            if pretty:
+                msg_str = '\n\n' + _pretty_format(msg)
+            else:
+                msg_str = '\n' + str(msg)
         except Exception:
-            msg_str = f"<unprintable {type(msg).__name__}>"
+            msg_str = f'<unprintable {type(msg).__name__}>'
+
         # just call logger.log() normally, passing rate info
-        self._logger.log(level, msg_str, extra={"_rate_limit_interval": rate})
-    
+        self._logger.log(level, msg_str, extra={'_rate_limit_interval': rate})
+
     def setLevel(self, level: int):
         r"""
         Sets the minimum severity level to print out.
@@ -119,22 +125,45 @@ class SmartLogger:
         self._logger.setLevel(level)
 
     # convenience
-    def info(self, msg: Any, rate: float = 0.0):
-        self.log(msg, rate=rate, level=logging.INFO)
+    def info(self, msg: Any, rate: float = 0.0, pretty=True):
+        self.log(msg, rate=rate, level=logging.INFO, pretty=pretty)
 
-    def debug(self, msg: Any, rate: float = 0.0):
-        self.log(msg, rate=rate, level=logging.DEBUG)
+    def debug(self, msg: Any, rate: float = 0.0, pretty=True):
+        self.log(msg, rate=rate, level=logging.DEBUG, pretty=pretty)
 
-    def warn(self, msg: Any, rate: float = 0.0):
-        self.log(msg, rate=rate, level=logging.WARNING)
+    def warn(self, msg: Any, rate: float = 0.0, pretty=True):
+        self.log(msg, rate=rate, level=logging.WARNING, pretty=pretty)
 
-    def error(self, msg: Any, rate: float = 0.0):
-        self.log(msg, rate=rate, level=logging.ERROR)
+    def error(self, msg: Any, rate: float = 0.0, pretty=True):
+        self.log(msg, rate=rate, level=logging.ERROR, pretty=pretty)
 
 
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
-def check_realtime(start_t:float, tolerance=0.05) -> None:
+
+def check_realtime(start_t: float, tolerance=0.05) -> None:
     dt = time() - start_t  # Check if your code is running fast enough.
     if dt > tolerance:
-        logger.warn(f"The step() loop took {dt:2f}s!", rate=1)
+        logger.warn(f'The step() loop took {dt:2f}s!', rate=1)
+
+
+def _pretty_format(msg: Any) -> str:
+    """Break dicts and iterables into newlines for more legible printing using pprint."""
+    try:
+        # SimpleNamespace or __dict__ haver.
+        if hasattr(msg, '__dict__'):
+            return pprint.pformat(msg.__dict__, indent=2, sort_dicts=False)
+
+        # Regular dicts.
+        if isinstance(msg, dict):
+            return pprint.pformat(msg, indent=2, sort_dicts=False)
+
+        # list/tuple/set.
+        if isinstance(msg, (list, tuple, set)):
+            return pprint.pformat(msg, indent=2, sort_dicts=False)
+
+        # Otherwise just use __str__
+        return str(msg)
+
+    except Exception:
+        return f'Unprintable type {type(msg).__name__}'
