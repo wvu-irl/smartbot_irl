@@ -7,7 +7,7 @@ from typing import Optional
 import yaml
 
 from .smartbot_base import SmartBotBase
-from ..data._converters import ROS_TYPE_MAP
+
 from ..data import (
     ArucoMarkers,
     Odometry,
@@ -63,11 +63,13 @@ class SmartBotReal(SmartBotBase):
 
         # Specify which topics and their types we will subscribe to.
         self.sensor_data = SensorData()
+
+        # Note: a `smartbot<n>` prefix is appended to topic names later.
+        # TODO move into yaml.
         self._topic_map = {  # "<ros2_topic_name>": (<type_maps.Pose>, "<SensorData.field>")
             'odom': (Odometry, 'odom'),
             'scan': (LaserScan, 'scan'),
             'joint_states': (JointState, 'joints'),
-            'aruco_poses': (PoseArray, 'aruco_poses'),
             'livox/imu': (IMU, 'imu'),
             'gripper_curr_state': (String, 'gripper_curr_state'),
             'manipulator_curr_preset': (String, 'manipulator_curr_preset'),
@@ -116,63 +118,52 @@ class SmartBotReal(SmartBotBase):
             raise RuntimeError('Failed to connect to rosbridge_server.')
 
         # Set up publishers.
+        # TODO move into yaml.
         self.cmd_vel_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/cmd_vel',
-            'geometry_msgs/Twist',
+            ros=self.client,
+            name=prefix + '/cmd_vel',
+            message_type='geometry_msgs/Twist',
         )
         self.manipulator_presets_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/manipulator_presets',
-            'std_msgs/String',
+            ros=self.client,
+            name=prefix + '/manipulator_presets',
+            message_type='std_msgs/String',
         )
         self.gripper_closed_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/gripper_closed',
-            'std_msgs/Bool',
+            ros=self.client,
+            name=prefix + '/gripper_closed',
+            message_type='std_msgs/Bool',
         )
         self.place_hex_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/place_hex',
-            'geometry_msgs/Pose',
+            ros=self.client,
+            name=prefix + '/place_hex',
+            message_type='geometry_msgs/Pose',
         )
 
         # Set up subscribers.
         for name, (cls, field_name) in self._topic_map.items():
-            topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
-            topic.subscribe(
-                lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c._from_ros(msg))
+            topic = roslibpy.Topic(
+                ros=self.client,
+                name=f'{prefix}/{name}',
+                message_type=cls._ros_type,
             )
-        print(f'Subscribers and publishers found for {prefix}/* topics')
-
-    # def place_hex(self, x=None, y=None):
-    #     """Place a new hex marker at a random or specified world position."""
-    #     if not self.client or not self.client.is_connected:
-    #         print('Cannot place hex: ROSBridge not connected.')
-    #         return
-
-    #     if x is None or y is None:
-    #         # randomize within a 3x3 meter box centered at origin
-    #         import random
-
-    #         x = random.uniform(-3.0, 3.0)
-    #         y = random.uniform(-3.0, 3.0)
-
-    #     msg = {
-    #         'position': {'x': float(x), 'y': float(y), 'z': 0.0},
-    #         'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
-    #     }
-    #     self.place_hex_pub.publish(roslibpy.Message(msg))
-    #     print(f'Placed hex at ({x:.2f}, {y:.2f})')
+            topic.subscribe(
+                callback=lambda msg, f=field_name, c=cls: setattr(
+                    self.sensor_data,
+                    f,
+                    c._from_ros(msg),
+                )
+            )
+        logger.info(f'Subscribers and publishers found for {prefix}/* topics')
 
     # Publish messages.
     def write(self, cmd: Command) -> None:
-        """Publish the contents of :param:`cmd` to Ros2.
+        """Publish the contents of ``cmd`` to Ros2.
 
-        Args:
-            cmd (:class:`smartbot_irl.Command`):
-                An instance of :class:`smartbot_irl.Command` which should
-                be populated with values to be published.
+        Parameters
+        ----------
+            cmd: Command
+                A Command object populated with values to be published to the robot..
         """
         if not self.client or not self.client.is_connected:
             print('Not connected to ROSBridge; cannot publish command.')
@@ -182,7 +173,7 @@ class SmartBotReal(SmartBotBase):
         assert self.manipulator_presets_pub is not None
         assert self.gripper_closed_pub is not None
 
-        msgs = cmd.to_ros()
+        msgs = cmd._to_ros()
 
         if 'geometry_msgs/Twist' in msgs:
             self.cmd_vel_pub.publish(roslibpy.Message(msgs['geometry_msgs/Twist']))
@@ -193,31 +184,27 @@ class SmartBotReal(SmartBotBase):
         if 'std_msgs/Bool' in msgs:
             self.gripper_closed_pub.publish(roslibpy.Message(msgs['std_msgs/Bool']))
 
-    # -----------------------------------------------------------------
     def read(self) -> SensorData:
         """Return the most recently received sensor data."""
         return self.sensor_data
 
-    # -----------------------------------------------------------------
     def spin(self, dt: float = 0.01) -> None:
         """"""
         if not self.client or not self.client.is_connected:
             raise RuntimeError('ROSBridge client not connected.')
         if self.drawer and self.drawer._running:
             self.drawer.draw_once(dt)
-        # time.sleep(dt)
 
-    # -----------------------------------------------------------------
     def shutdown(self) -> None:
-        """Cleanly disconnect all topics, publishers, and client."""
-        print('Shutting down SmartBotReal...')
+        """Cleanly disconnect roslibpy and shutdown plotting."""
+        logger.info('Shutting down SmartBotReal...')
 
         # Unsubscribe all topics.
         for topic in self._subscriptions:
             try:
                 topic.unsubscribe()
             except Exception as e:
-                print(f'Warning: failed to unsubscribe {topic.name}: {e}')
+                logger.warn(f'Warning: failed to unsubscribe {topic.name}: {e}')
         self._subscriptions.clear()
 
         # Stop publishers.
@@ -235,7 +222,7 @@ class SmartBotReal(SmartBotBase):
                     self.client.terminate()
                 self.client.close()
             except Exception as e:
-                print(f'Error closing client: {e}')
+                logger.error(f'Error closing client: {e}')
             finally:
                 self.client = None
 
@@ -247,27 +234,4 @@ class SmartBotReal(SmartBotBase):
                 pass
 
         self._running = False
-        print('SmartBotReal shutdown complete.')
-
-
-if __name__ == '__main__':
-    bot = SmartBotReal(drawing=False)
-    bot.init(host='localhost', port=9090)
-
-    cmd = Command(
-        wheel_vel_left=0.3,
-        wheel_vel_right=0.3,
-        gripper_closed=True,
-        linear_vel=1,
-        manipulator_presets='DOWN',
-    )
-
-    try:
-        while True:
-            bot.write(cmd)
-            data = bot.read()
-            print(data.__dict__.keys)
-            # print(f"Odom: x={data.pose_x:.2f}, y={data.pose_y:.2f}, θ={data.pose_theta:.2f}")
-            bot.spin(0.5)
-    except KeyboardInterrupt:
-        bot.shutdown()
+        logger.info('SmartBotReal shutdown complete.')

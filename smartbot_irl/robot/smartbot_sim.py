@@ -35,6 +35,8 @@ class SmartBotSim(SmartBotBase):
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
 
+        self.init()
+
     def init(self, **kwargs) -> None:
         logger.info(msg='Connecting to smartbot...')
         logger.info(msg='Connecting connected !')

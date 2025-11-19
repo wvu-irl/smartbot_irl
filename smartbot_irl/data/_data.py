@@ -16,7 +16,7 @@ from .type_maps import (
 
 def list_sensor_columns() -> list[str]:
     """Return top-level keys from flatten()."""
-    s = SensorData.initialized()
+    s = SensorData()
     return list(s.flatten().keys())
 
 
@@ -58,8 +58,32 @@ def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
 class SensorData:
     """
     Container for all SmartBot sensor topics.
-    Each field starts as ``None`` and becomes a populated message
-    object (LaserScan, Odometry, etc.) once that topic is received.
+
+    Each attribute stores one sensor message object. Instances start
+    pre-initialized with empty message types; each message becomes
+    populated as new data arrives.
+
+    Attributes
+    ----------
+    odom : Odometry
+        Robot odometry message.
+    scan : LaserScan
+        Planar LiDAR scan message.
+    joints : JointState
+        Joint states for the robot's manipulator or mechanisms.
+    aruco_poses : PoseArray
+        Detected ArUco marker poses.
+    imu : IMU
+        Inertial measurement message.
+    gripper_curr_state : String
+        Current gripper state.
+    manipulator_curr_preset : String
+        Name of the current manipulator preset.
+    seen_hexes : ArucoMarkers
+        Set of detected hexagonal field markers.
+    seen_robots : PoseArray
+        Poses of detected nearby robots.
+
     """
 
     def __init__(self) -> None:
@@ -70,28 +94,8 @@ class SensorData:
         self.imu: IMU = IMU()
         self.gripper_curr_state: String = String()
         self.manipulator_curr_preset: String = String()
-        # self.seen_hexes: PoseArray = PoseArray()
         self.seen_hexes: ArucoMarkers = ArucoMarkers()
         self.seen_robots: PoseArray = PoseArray()
-
-    @classmethod
-    def initialized(cls) -> 'SensorData':
-        """
-        Return a new SensorData with all message objects constructed using
-        their default constructors. Useful for simulation environments
-        where we don't wait for ROS topics to populate.
-        """
-        self = cls()
-        self.odom = Odometry()
-        self.scan = LaserScan()
-        self.joints = JointState()
-        self.aruco_poses = PoseArray()
-        self.imu = IMU()
-        self.gripper_curr_state = String()
-        self.manipulator_curr_preset = String()
-        self.seen_hexes = ArucoMarkers()
-        self.seen_robots = PoseArray()
-        return self
 
     # ------------------------------------------------------------------
     def _to_ros(self) -> dict:
@@ -123,50 +127,118 @@ class SensorData:
         return f'SensorData(populated={keys}, missing={missing})'
 
     def flatten(self) -> dict:
-        """Return a partially flattened dict of all sensor fields."""
+        """
+        Return a flattened dictionary containing all sensor data fields.
+
+        This method walks every attribute in the ``SensorData`` instance then
+        applies ``flatten_generic`` to each, and merges the results into a
+        single dictionary. Useful for saving/printing.
+
+        Returns
+        -------
+        dict
+            A dictionary where all sensor values are flattened into key–value
+            pairs like:
+             ``'odom_x'``, ``'scan_ranges'``, ``'imu_roll'``, etc.
+        """
         out = {}
         for name, value in vars(self).items():
             out.update(flatten_generic(name, value))
         return out
 
 
-@dataclass
 class Command:
     """
-    High-level command for SmartBot.
+    High-level command container for SmartBot control.
 
-    Supports both:
-      - Differential drive control (linear + angular velocity)
-      - Direct wheel velocity control (left/right)
-      - Manipulator preset and gripper control
+    Attributes
+    ----------
+    wheel_vel_left : float or None
+        Left wheel velocity command.
+
+    wheel_vel_right : float or None
+        Right wheel velocity command.
+
+    linear_vel : float or None
+        Forward linear velocity in meters per second.
+
+    angular_vel : float or None
+        Angular velocity in radians per second (yaw rate).
+
+    gripper_closed : bool or None
+        ``True`` closes the gripper, ``False`` opens it.
+
+    manipulator_presets : str or None
+        Name of a manipulator preset to activate.
+
+    Notes
+    -----
+    Only fields that are not ``None`` are sent to the ROS2 system.
+
+    Examples
+    --------
+    Linear and angular velocity command:
+
+    >>> cmd = Command(linear_vel=0.5, angular_vel=1.0)
+    >>> bot.write(cmd)
+
+    Change arm state:
+
+    >>> cmd = Command(manipulator_presets='stow')
     """
 
-    wheel_vel_left: Optional[float] = None
-    wheel_vel_right: Optional[float] = None
-    linear_vel: Optional[float] = None
-    angular_vel: Optional[float] = None
-    gripper_closed: Optional[bool] = None
-    manipulator_presets: Optional[str] = None
+    def __init__(
+        self,
+        wheel_vel_left: float | None = None,
+        wheel_vel_right: float | None = None,
+        linear_vel: float | None = None,
+        angular_vel: float | None = None,
+        gripper_closed: bool | None = None,
+        manipulator_presets: str | None = None,
+    ) -> None:
+        # safe attribute initialization
+        self.wheel_vel_left = wheel_vel_left
+        self.wheel_vel_right = wheel_vel_right
+        self.linear_vel = linear_vel
+        self.angular_vel = angular_vel
+        self.gripper_closed = gripper_closed
+        self.manipulator_presets = manipulator_presets
 
     # -------------------------------------------------------------
     def _to_ros(self) -> dict:
         """
-        Convert this Command into a dictionary that rosliby can publish.
+        Convert this ``Command`` instance into a ROS-style dictionary
+        that ``roslibpy`` will take..
+
+        Only fields with non-``None`` values are included.
+
+        Returns
+        -------
+        dict
+            A mapping of ROS message types to dictionaries.
         """
         msgs = {}
 
-        # velocity command (Twist)
+        # Differential drive (Twist)
         if self.linear_vel is not None or self.angular_vel is not None:
             msgs['geometry_msgs/Twist'] = {
-                'linear': {'x': self.linear_vel or 0.0, 'y': 0.0, 'z': 0.0},
-                'angular': {'x': 0.0, 'y': 0.0, 'z': self.angular_vel or 0.0},
+                'linear': {
+                    'x': self.linear_vel or 0.0,
+                    'y': 0.0,
+                    'z': 0.0,
+                },
+                'angular': {
+                    'x': 0.0,
+                    'y': 0.0,
+                    'z': self.angular_vel or 0.0,
+                },
             }
 
-        # manipulator preset (String)
+        # Manipulator preset (String)
         if self.manipulator_presets is not None:
             msgs['std_msgs/String'] = {'data': str(self.manipulator_presets)}
 
-        # gripper state (Bool)
+        # Gripper (Bool)
         if self.gripper_closed is not None:
             msgs['std_msgs/Bool'] = {'data': bool(self.gripper_closed)}
 

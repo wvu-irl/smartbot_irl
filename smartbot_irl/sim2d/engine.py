@@ -21,7 +21,7 @@ class SimEngine:
     def __init__(self, wheel_base: float = 0.3):
         self.wheel_base = wheel_base
         # self.last_t = time.time()
-        self.state = SensorData.initialized()  # holds all simulated values
+        self.state = SensorData()  # holds all simulated values
         self._last_vx = 0.0
         self._last_vy = 0.0
         self.vx_body = 0.0
