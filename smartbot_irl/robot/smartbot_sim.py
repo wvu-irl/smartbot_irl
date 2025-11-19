@@ -15,13 +15,19 @@ logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
 
 class SmartBotSim(SmartBotBase):
-    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))) -> None:
-        super().__init__(drawing=drawing, draw_region=draw_region)
-        self.engine = SimEngine()
+    """Simulated Smartbot control object.
 
-        self.engine.add_obstacle(1.0, 0.0, 1.0, 0.5)
-        self.engine.add_obstacle(-2.0, 2.0, 0.5, 0.5)
-        self.engine.add_obstacle(-3.0, -2.0, 0.1, 2.5)
+    Parameters
+    ----------
+    SmartBotBase : _type_
+        _description_
+    """
+
+    def __init__(
+        self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5)), **kwargs
+    ) -> None:
+        super().__init__(drawing=drawing, draw_region=draw_region)
+        self.engine: SimEngine = SimEngine()
 
         self.cam_fov = 70
 
@@ -56,8 +62,8 @@ class SmartBotSim(SmartBotBase):
 
         print('SmartBotSim initialized')
 
-    def place_hex(self, x=None, y=None) -> None:
-        self.engine.place_hex(x, y)
+    # def place_hex(self, x=None, y=None) -> None:
+    #     self.engine.place_hex(x, y)
 
     def write(self, cmd: Command) -> None:
         self.engine.apply_command(cmd)

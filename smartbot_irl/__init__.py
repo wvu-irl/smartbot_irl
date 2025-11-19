@@ -11,7 +11,6 @@ __all__ = [
     'Command',
     'data',
     'drawing',
-    'SmartBotType',
     'robot',
     'sim2d',
     'utils',

@@ -15,16 +15,7 @@ def SmartBot(mode: Literal['real'], drawing: bool = False, **kwargs) -> SmartBot
 def SmartBot(mode: Literal['sim'], drawing: bool = False, **kwargs) -> SmartBotSim: ...
 
 
-def _smartbot_factory(
-    mode: str = 'real', drawing: bool = False, **kwargs
-) -> Union[SmartBotReal, SmartBotSim]:
-    """Internal factory returning SmartBotSim or SmartBotReal."""
-    if mode == 'sim':
-        return SmartBotSim(drawing=drawing, **kwargs)
-    return SmartBotReal(drawing=drawing, **kwargs)
-
-
-def SmartBot(  # noqa: D401  # pyright: ignore[reportRedeclaration]
+def SmartBot(
     mode: str = 'real', drawing: bool = False, **kwargs
 ) -> Union[SmartBotReal, SmartBotSim]:
     """
@@ -57,39 +48,3 @@ def SmartBot(  # noqa: D401  # pyright: ignore[reportRedeclaration]
         return SmartBotSim(drawing=drawing, **kwargs)
     else:
         return SmartBotReal(drawing=drawing, **kwargs)
-
-
-class SmartBot:
-    """
-    High-level SmartBot interface.
-
-    This is a convenience entry point that constructs either
-    :class:`~smartbot_irl.robot.SmartBotReal` or
-    :class:`~smartbot_irl.robot.SmartBotSim`
-    depending on the mode.  It behaves like a class for users,
-    even though it is implemented as a factory.
-
-    Parameters
-    ----------
-    mode : {'real', 'sim'}
-        Backend to instantiate.
-
-    drawing : bool, optional
-        Enable drawing/visualization.
-
-    **kwargs
-        Passed directly into the selected backend constructor.
-
-    Returns
-    -------
-    Union[SmartBotReal, SmartBotSim]
-        Concrete backend instance.
-    """
-
-    def __new__(cls, mode='real', drawing=False, **kwargs):
-        return _smartbot_factory(mode=mode, drawing=drawing, **kwargs)
-
-    # pass  # Sphinx sees this as the class.
-
-
-# SmartBot.__doc__ = None  # Hide from autodoc

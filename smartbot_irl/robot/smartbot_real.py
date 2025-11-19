@@ -33,6 +33,18 @@ import logging
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
 
+class NullEngine:
+    """A null engine that silently ignores everything."""
+
+    def __getattr__(self, name):
+        # Allows infinite chaining: engine.foo.bar.baz
+        return self
+
+    def __call__(self, *args, **kwargs):
+        # Calling it does nothing
+        return None
+
+
 class SmartBotReal(SmartBotBase):
     """
     Wrapper for the real robot's ros2 system.
@@ -88,6 +100,8 @@ class SmartBotReal(SmartBotBase):
         """
         prefix = f'/smartbot{self.smartbot_num}'
         self._running = True
+
+        self.engine: None = NullEngine
 
         # Connect to ros bridge server. Give up after 5s.
         logger.info(msg='Connecting to smartbot...')

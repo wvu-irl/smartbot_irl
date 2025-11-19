@@ -8,4 +8,5 @@ from .smartbot_real import SmartBotReal
 from .smartbot_sim import SmartBotSim
 
 SmartBotType: TypeAlias = SmartBotReal | SmartBotSim
+
 __all__ = ['SmartBot', 'SmartBotReal', 'SmartBotSim', 'SmartBotType']
