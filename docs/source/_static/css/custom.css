@@ -1,165 +1,242 @@
 /* Increase overall width of page while keeping centered layout */
 .bd-page-width {
-    max-width: 1600px; /* default is usually ~1200px */
-    width: 95%;
-    margin: 0 auto;
+  max-width: 1600px; /* default is usually ~1200px */
+  width: 95%;
+  margin: 0 auto;
 }
 
 /* Let the main content use more horizontal space */
 .bd-content .bd-article-container {
-    max-width: 100%;
-    width: 100%;
+  max-width: 100%;
+  width: 100%;
 }
 
 .bd-content img {
-    display: block;
-    margin-top: 1.5em;
-    margin-bottom: 2.5em;
+  display: block;
+  margin-top: 1.5em;
+  margin-bottom: 2.5em;
 
-    margin-left: auto;
-    margin-right: auto;
-        /* Drop shadow */
-    box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.26),
-        0 0 0 1px rgba(0, 0, 0, 0.12);
+  margin-left: auto;
+  margin-right: auto;
+  /* Drop shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 html[data-theme="light"] .bd-content img {
-    box-shadow:
-        0 7px 10px rgba(0, 0, 0, 0.25),
-        0 0 0 1px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 7px 10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.14);
 }
 
 html[data-theme="dark"] .bd-content img {
-    box-shadow:
-        0 2px 10px rgba(255, 255, 255, 0.26),
-        0 0 0 8px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.26),
+    0 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
 .bd-content video {
-    display: block;
-    margin-bottom: 2em;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 8px;
+  display: block;
+  margin-bottom: 2em;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 8px;
 }
 
 html[data-theme="light"] .bd-content video {
-    box-shadow:
-        0 1px 10px rgba(0, 0, 0, 0.15),
-        0 0 0 2px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(0, 0, 0, 0.14);
 }
 
 html[data-theme="dark"] .bd-content video {
-    box-shadow:
-        0 2px 10px rgba(255, 255, 255, 0.15),
-        0 0 0 8px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15),
+    0 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
-
 .video-card {
-    display: block;
-    margin: 2.5em auto;
-    padding: 0.75em;               /* space around the video so shadow shows */
-    border-radius: 10px;
-    overflow: visible !important;  /* prevent clipping */
-    background: none;
-    
-    box-shadow:
-        0 8px 20px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(0,0,0,0.15); /* symmetric outline */
+  display: block;
+  margin: 2.5em auto;
+  padding: 0.75em; /* space around the video so shadow shows */
+  border-radius: 10px;
+  overflow: visible !important; /* prevent clipping */
+  background: none;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.15); /* symmetric outline */
 }
 
 .video-card video {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin: 0;  /* reset video margins */
-    border-radius: 8px;
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0; /* reset video margins */
+  border-radius: 8px;
 }
 
-/* ========= Shared Box Styling ========= */
-
-dl.py.function,
+/* ========================================== */
+/* Box around entire obj */
+/* ========================================== */
 dl.py.class,
-dl.py.attribute {
-    margin: 2em 0;
-    padding: 3.5em 1.2em 0.5em;
-    border-left: 4px solid var(--pst-color-primary);
-    border-radius: 6px;
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.05),
-        0 0 0 1px rgba(0, 0, 0, 0.08);
+dl.py.function,
+dl.py.method {
+  margin: 1em 0;
+  padding: 1em 1em 0.5em;
+  border-left: 4px solid var(--pst-color-primary);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05),
+              0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
-/* ========= Header Bar Styling ========= */
-
-dl.py.function > dt,
+/* Header bar */
 dl.py.class > dt,
+dl.py.function > dt,
+dl.py.method > dt {
+  font-weight: 700;
+  font-size: 1em;
+  padding: 0.1em 0.75em;
+  margin: -1.2em -1.2em 0.6em -1.2em;
+  border-bottom: 1px solid var(--pst-color-border);
+  border-radius: 6px 6px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+
+/*======================================================
+   2. ATTRIBUTES → NO CARDS, COMPACT TABLE-LIKE BLOCKS
+=======================================================*/
+dl.py.attribute {
+  margin: 0.75em 0;
+  padding: 0.4em 0.6em;
+  border-left: 2px solid var(--pst-color-primary);
+  border-radius: 4px;
+  background: var(--pst-color-surface);
+  box-shadow: none !important; /* remove card styling */
+}
+
+/* Attribute heading */
 dl.py.attribute > dt {
-    font-weight: 700;
-    font-size: 1.0em;
-    padding: 0.1em 0.75em;
-    margin: -1.2em -1.2em 0.6em -1.2em;
-    border-bottom: 1px solid var(--pst-color-border);
-    border-radius: 6px 6px 0 0;
-    white-space: pre-wrap;
-    word-break: break-word;
+  font-weight: 600;
+  padding: 0;
+  margin: 0 0 0.2em 0;
+  border: none;
+  font-size: 0.95em;
 }
 
-/* ========= Light Mode Theme Overrides ========= */
-html[data-theme="light"] dl.py.function,
-html[data-theme="light"] dl.py.class,
-html[data-theme="light"] dl.py.attribute {
-    background-color: #fcfcfc;
-    border-left-color: #0066cc;
-    box-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.07),
-        0 0 0 1px rgba(0, 0, 0, 0.08);
+/* Attribute content */
+dl.py.attribute > dd {
+  margin-left: 1em;
+  margin-bottom: 0.3em;
+  line-height: 1.35;
 }
 
-html[data-theme="light"] dl.py.function > dt,
-html[data-theme="light"] dl.py.class > dt,
-html[data-theme="light"] dl.py.attribute > dt {
-    background-color: #eef6ff;
-    color: #003366;
+
+/*======================================================
+   3. PARAMETERS / RETURNS / FIELDS → COMPACT TABLE
+=======================================================*/
+
+/* Base styling for all field lists (Attributes, Parameters, Returns, etc.) */
+dl.field-list {
+  padding: 0.5em 0.75em;
+  border-left: 2px solid var(--pst-color-primary);
+  border-radius: 4px;
+  margin: 0.5em 0 1em 0;
+  box-shadow: none;
 }
 
-/* ========= Dark Mode Theme Overrides ========= */
-html[data-theme="dark"] dl.py.function,
-html[data-theme="dark"] dl.py.class,
-html[data-theme="dark"] dl.py.attribute {
-    background-color: #181a1b;
-    border-left-color: #4fa3ff;
-    box-shadow:
-        0 1px 2px rgba(255, 255, 255, 0.05),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-html[data-theme="dark"] dl.py.function > dt,
-html[data-theme="dark"] dl.py.class > dt,
-html[data-theme="dark"] dl.py.attribute > dt {
-    background-color: #202324;
-    color: #9ecbff;
-    border-bottom: 1px solid #2d2d2d;
-}
-
-/* ========= Inside Class Body: spacing between method/attr blocks ========= */
-dl.py.class dd > dl.py.method,
-dl.py.class dd > dl.py.attribute {
-    margin-top: 1.2em;
-    margin-left: 1.5em;
-}
-
-/* ========= Field list (Parameters, Returns, etc.) styling ========= */
+/* Field label (“Attributes”, “Parameters”, “Returns”, etc.) */
 dl.field-list > dt {
-    font-weight: 300;
-    font-size: 1.0em;
-    color: var(--pst-color-text-base);
-    margin-bottom: 0.4em;
+  font-weight: 600;
+  font-size: 0.9em;
+  margin-bottom: 0.3em;
 }
 
+/* Container for the contents of that field (the list of items) */
 dl.field-list > dd {
-    margin-bottom: .4em;
-    line-height: 1.6;
+  margin-left: 0.75em;
+  margin-bottom: 0.3em;
 }
+
+
+dl.field-list > dt.field-odd {
+	background-color: #126e29;
+	margin-bottom: .1rem;
+	margin-top: .2rem;
+}
+
+dl.field-list > dt.field-even {
+	background-color: #12376e;
+	margin-bottom: .1rem;
+	margin-top: .2rem;
+}
+
+
+
+/*********************************************/
+/* LIGHT MODE                                */
+/*********************************************/
+html[data-theme="light"] dl.py.class,
+html[data-theme="light"] dl.py.function,
+html[data-theme="light"] dl.py.method {
+  background-color: #fcfcfc;
+  border-left-color: #0066cc;
+}
+
+html[data-theme="light"] dl.py.class > dt,
+html[data-theme="light"] dl.py.function > dt,
+html[data-theme="light"] dl.py.method > dt {
+  background-color: #eef6ff;
+  color: #003366;
+}
+
+html[data-theme="light"] dl.py.attribute {
+  background: #f8f9fb;
+  border-left-color: #005cb8;
+}
+
+html[data-theme="light"] dl.field-list {
+  background: #f8f9fb;
+  border-left-color: #5481ad;
+}
+
+html[data-theme="light"] .bd-content dl.field-list dt.field-odd {
+    background-color: #132b38 !important;
+    color: white !important;
+}
+
+html[data-theme="light"] .bd-content dl.field-list dt.field-even {
+    background-color: #126e3b !important;
+    color: white !important;
+}
+
+/*********************************************/
+/* DARK MODE                                 */
+/*********************************************/
+html[data-theme="dark"] dl.py.class,
+html[data-theme="dark"] dl.py.function,
+html[data-theme="dark"] dl.py.method {
+  background-color: #181a1b;
+  border-left-color: #4fa3ff;
+}
+
+html[data-theme="dark"] dl.py.class > dt,
+html[data-theme="dark"] dl.py.function > dt,
+html[data-theme="dark"] dl.py.method > dt {
+  background-color: #202324;
+  color: #9ecbff;
+}
+
+html[data-theme="dark"] dl.py.attribute {
+  background-color: #1e1f20;
+  border-left-color: #4fa3ff;
+}
+
+html[data-theme="dark"] dl.field-list {
+  background-color: #1e1f20;
+  border-left-color: #4fa3ff;
+}
+
+html[data-theme="dark"] .bd-content dl.field-list dt.field-odd {
+    background-color: #1a3346 !important;
+    color: white !important;
+}
+
+html[data-theme="dark"] .bd-content dl.field-list dt.field-even {
+    background-color: #2f4fa3 !important;
+    color: white !important;
+}
+

@@ -1,15 +1,28 @@
+
+.. .. automodule:: {{ fullname }}
+..    :no-members:
+..    :show-inheritance:
+
+.. {{ doc }}
+
+.. {{ super }}
+
+
+.. {{ fullname | escape | underline }}
+
 .. automodule:: {{ fullname }}
    :no-members:
-   :undoc-members:
    :show-inheritance:
 
-{{ doc }}
-
 {{ fullname | escape | underline }}
+===========
+
+{{ super }}
+
 
 {% if modules %}
 Subpackages
-==========
+===========
 
 .. autosummary::
    :nosignatures:
@@ -19,9 +32,10 @@ Subpackages
 {% endfor %}
 {% endif %}
 
+
 {% if functions %}
 Functions
-==========
+=========
 
 .. autosummary::
    :nosignatures:
@@ -30,9 +44,10 @@ Functions
 {% endfor %}
 {% endif %}
 
+
 {% if classes %}
 Classes
-==========
+=======
 
 .. autosummary::
    :nosignatures:
@@ -40,6 +55,7 @@ Classes
    {{ fullname }}.{{ c }}
 {% endfor %}
 {% endif %}
+
 
 {% if attributes %}
 Attributes
@@ -52,12 +68,12 @@ Attributes
 {% endfor %}
 {% endif %}
 
+
+
 {# -- Start Detail Blocks -- #}
-
 {% if functions %}
-
 Function Details
--------
+----------------
 {% for f in functions %}
 .. _{{ fullname }}.{{ f }}:
 
@@ -66,29 +82,22 @@ Function Details
 {% endfor %}
 {% endif %}
 
+
+{# ---------- CLASSES ---------- #}
+{% block classes %}
 {% if classes %}
+.. rubric:: Classes
 
-Class Details
--------
-{% for c in classes %}
-.. _{{ fullname }}.{{ c }}:
+{% for item in classes %}
+.. _{{ fullname }}.{{ item }}:
 
-.. autoclass:: {{ fullname }}.{{ c }}
+.. autoclass:: {{ fullname }}.{{ item }}
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :member-order: bysource
+
 
 {% endfor %}
 {% endif %}
+{% endblock %}
 
-{% if attributes %}
 
-Attribute Details
--------
-{% for a in attributes %}
-.. _{{ fullname }}.{{ a }}:
-
-.. autoattribute:: {{ fullname }}.{{ a }}
-
-{% endfor %}
-{% endif %}
