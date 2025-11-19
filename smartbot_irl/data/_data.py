@@ -1,7 +1,7 @@
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Any, Dict, Optional
 
-from ._type_maps import (
+from .type_maps import (
     IMU,
     ArucoMarkers,
     Bool,
@@ -94,27 +94,27 @@ class SensorData:
         return self
 
     # ------------------------------------------------------------------
-    def to_ros(self) -> dict:
+    def _to_ros(self) -> dict:
         """Convert only populated fields to ROS-like dicts."""
         d = {}
         if self.odom:
-            d['odom'] = self.odom.to_ros()
+            d['odom'] = self.odom._to_ros()
         if self.scan:
-            d['scan'] = self.scan.to_ros()
+            d['scan'] = self.scan._to_ros()
         if self.joints:
-            d['joints'] = self.joints.to_ros()
+            d['joints'] = self.joints._to_ros()
         if self.aruco_poses:
-            d['aruco_poses'] = self.aruco_poses.to_ros()
+            d['aruco_poses'] = self.aruco_poses._to_ros()
         if self.imu:
             d['imu'] = self.imu.__dict__
         if self.gripper_curr_state:
-            d['gripper_curr_state'] = self.gripper_curr_state.to_ros()
+            d['gripper_curr_state'] = self.gripper_curr_state._to_ros()
         if self.manipulator_curr_preset:
-            d['manipulator_curr_preset'] = self.manipulator_curr_preset.to_ros()
+            d['manipulator_curr_preset'] = self.manipulator_curr_preset._to_ros()
         if self.seen_hexes:
-            d['seen_hexes'] = self.seen_hexes.to_ros()
+            d['seen_hexes'] = self.seen_hexes._to_ros()
         if self.seen_robots:
-            d['seen_robots'] = self.seen_robots.to_ros()
+            d['seen_robots'] = self.seen_robots._to_ros()
         return d
 
     def __repr__(self):
@@ -149,7 +149,7 @@ class Command:
     manipulator_presets: Optional[str] = None
 
     # -------------------------------------------------------------
-    def to_ros(self) -> dict:
+    def _to_ros(self) -> dict:
         """
         Convert this Command into a dictionary that rosliby can publish.
         """

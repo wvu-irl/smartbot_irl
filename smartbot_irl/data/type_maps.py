@@ -45,7 +45,7 @@ class Pose:
     yaw: float = 0.0
 
     @classmethod
-    def from_ros(cls, msg: dict) -> Pose:
+    def _from_ros(cls, msg: dict) -> Pose:
         """
         Create a ``Pose`` from a ROS ``geometry_msgs/Pose`` msg.
 
@@ -87,7 +87,7 @@ class Pose:
         )
 
     # TODO convert RPY back to quat?
-    def to_ros(self) -> dict[str, dict[str, float]]:
+    def _to_ros(self) -> dict[str, dict[str, float]]:
         """
         Create a ``geometry_msgs/Pose`` from a ROS ``Pose`` msg.
 
@@ -101,7 +101,7 @@ class Pose:
 
         Example:
             >>> p = Pose(x=1.0, y=2.0, yaw=3.14)
-            >>> ros = p.to_ros()
+            >>> ros = p._to_ros()
         """
         return {
             'position': {'x': self.x, 'y': self.y, 'z': self.z},
@@ -132,7 +132,7 @@ class Odometry:
     wz: float = 0.0
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         pose = msg.get('pose', {}).get('pose', {})
         pos = pose.get('position', {})
         ori = pose.get('orientation', {})
@@ -169,7 +169,7 @@ class Odometry:
             wz=ang.get('z', 0.0),
         )
 
-    def to_ros(self):
+    def _to_ros(self):
         return {
             'pose': {
                 'pose': {
@@ -193,12 +193,12 @@ class PoseArray:
     poses: List[Pose] = field(default_factory=list)
 
     @classmethod
-    def from_ros(cls, msg: dict):
-        poses = [Pose.from_ros(p) for p in msg.get('poses', [])]
+    def _from_ros(cls, msg: dict):
+        poses = [Pose._from_ros(p) for p in msg.get('poses', [])]
         return cls(poses=poses)
 
-    def to_ros(self):
-        return {'poses': [p.to_ros() for p in self.poses]}
+    def _to_ros(self):
+        return {'poses': [p._to_ros() for p in self.poses]}
 
 
 # ------------------------------------------------------------
@@ -209,14 +209,14 @@ class ArucoMarkers:
     marker_ids: List[int] = field(default_factory=list)
 
     @classmethod
-    def from_ros(cls, msg: dict):
-        poses = [Pose.from_ros(p) for p in msg.get('poses', [])]
+    def _from_ros(cls, msg: dict):
+        poses = [Pose._from_ros(p) for p in msg.get('poses', [])]
         marker_ids = list(msg.get('marker_ids', []))
         return cls(poses=poses, marker_ids=marker_ids)
 
-    def to_ros(self) -> dict[str, Any]:
+    def _to_ros(self) -> dict[str, Any]:
         return {
-            'poses': [p.to_ros() for p in self.poses],
+            'poses': [p._to_ros() for p in self.poses],
             'marker_ids': list(self.marker_ids),
         }
 
@@ -257,7 +257,7 @@ class LaserScan:
     angle_increment: float = 0.0
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         return cls(
             ranges=msg.get('ranges', []),
             angle_min=msg.get('angle_min', 0.0),
@@ -265,7 +265,7 @@ class LaserScan:
             angle_increment=msg.get('angle_increment', 0.0),
         )
 
-    def to_ros(self):
+    def _to_ros(self):
         return {
             'ranges': self.ranges,
             'angle_min': self.angle_min,
@@ -283,14 +283,14 @@ class JointState:
     velocities: List[float] = field(default_factory=list)
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         return cls(
             names=msg.get('name', []),
             positions=msg.get('position', []),
             velocities=msg.get('velocity', []),
         )
 
-    def to_ros(self):
+    def _to_ros(self):
         return {
             'name': self.names,
             'position': self.positions,
@@ -325,7 +325,7 @@ class IMU:
     az: float = 0.0
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         ori = msg.get('orientation', {})
         ang = msg.get('angular_velocity', {})
         acc = msg.get('linear_acceleration', {})
@@ -357,7 +357,7 @@ class IMU:
             az=acc.get('z', 0.0),
         )
 
-    def to_ros(self):
+    def _to_ros(self):
         return {
             'orientation': {
                 'x': self.qx,
@@ -385,10 +385,10 @@ class Bool:
     data: bool = False
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         return cls(data=msg.get('data', False))
 
-    def to_ros(self):
+    def _to_ros(self):
         return {'data': self.data}
 
 
@@ -399,8 +399,8 @@ class String:
     data: str = ''
 
     @classmethod
-    def from_ros(cls, msg: dict):
+    def _from_ros(cls, msg: dict):
         return cls(data=msg.get('data', ''))
 
-    def to_ros(self):
+    def _to_ros(self):
         return {'data': self.data}

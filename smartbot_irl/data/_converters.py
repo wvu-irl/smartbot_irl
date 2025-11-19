@@ -6,7 +6,7 @@ adding messages that use new types make a new `from_<type>` here.
 
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-from ._type_maps import ArucoMarkers, Pose, PoseArray, LaserScan, JointState, IMU, Bool, String
+from .type_maps import ArucoMarkers, Pose, PoseArray, LaserScan, JointState, IMU, Bool, String
 
 
 def from_pose(msg: dict) -> Pose:
