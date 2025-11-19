@@ -20,7 +20,7 @@ proper.
 
 
 @dataclass
-class State:
+class States:
     state_vec: pd.DataFrame = field(init=False)
     next_index: int = field(default=0, init=False)
 

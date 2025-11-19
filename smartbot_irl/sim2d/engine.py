@@ -28,6 +28,8 @@ class SimEngine:
         self.prev_vx_body = 0.0
         self.cam_fov = 70
         self.lidar_max_range = 10
+        self.robot_radius = 0.2
+        self.camera_range = 4
 
         self.obstacles: list[tuple[float, float, float, float]] = []
 
@@ -44,6 +46,24 @@ class SimEngine:
 
         self.markers: list[tuple[int, float, float]] = []
         self._next_marker_id = 0
+
+    def _in_arena(self, x: float, y: float, margin: float = 0.0) -> bool:
+        """Return True if (x,y) is inside arena bounds (with optional margin)."""
+        return (
+            self.arena['xmin'] + margin <= x <= self.arena['xmax'] - margin
+            and self.arena['ymin'] + margin <= y <= self.arena['ymax'] - margin
+        )
+
+    def _would_collide(self, x: float, y: float) -> bool:
+        """Return True if robot center at (x,y) would collide with arena or obstacles."""
+        r = self.robot_radius
+        # Outside arena => collision
+        if not self._in_arena(x, y, margin=r):
+            return True
+        # Inside (inflated) obstacle => collision
+        if self.is_inside_obstacle(x, y, margin=r):
+            return True
+        return False
 
     # ------------------------------------------------------------------
     def apply_command(self, cmd: Command) -> None:
@@ -110,18 +130,60 @@ class SimEngine:
         self.prev_vx_body = self.vx_body
         self.vx_body = (1 - alpha) * self.vx_body + alpha * ideal_vel
 
-        # Put lin vel in odom frame.
-        s.odom.vx = cos(s.odom.yaw) * self.vx_body
-        s.odom.vy = sin(s.odom.yaw) * self.vx_body
+        # # Put lin vel in odom frame.
+        # s.odom.vx = cos(s.odom.yaw) * self.vx_body
+        # s.odom.vy = sin(s.odom.yaw) * self.vx_body
 
         # Ang vel in odom frame.
+        # s.odom.wz = (wr - wl) / self.wheel_base
+
+        # # Integrate pose (odom frame).
+        # # Odom is perfect true simulator pos.
+        # s.odom.yaw += s.odom.wz * dt
+        # s.odom.x += s.odom.vx * dt
+        # s.odom.y += s.odom.vy * dt
+
+        # Current pose
+        x = s.odom.x
+        y = s.odom.y
+        yaw = s.odom.yaw
+
+        # Velocities in odom frame
+        s.odom.vx = cos(yaw) * self.vx_body
+        s.odom.vy = sin(yaw) * self.vx_body
         s.odom.wz = (wr - wl) / self.wheel_base
 
-        # Integrate pose (odom frame).
-        # Odom is perfect true simulator pos.
-        s.odom.yaw += s.odom.wz * dt
-        s.odom.x += s.odom.vx * dt
-        s.odom.y += s.odom.vy * dt
+        # Predict new pose
+        x_new = x + s.odom.vx * dt
+        y_new = y + s.odom.vy * dt
+        yaw_new = yaw + s.odom.wz * dt
+
+        # Normalize yaw_new into [-pi, pi]
+        if yaw_new > math.pi:
+            yaw_new -= 2 * math.pi
+        elif yaw_new < -math.pi:
+            yaw_new += 2 * math.pi
+
+        # Collision check on the *translated* pose
+        if self._would_collide(x_new, y_new):
+            # Collision: do not move, zero linear velocity.
+            # Allow rotation in place using yaw_new if you want rotation to continue,
+            # or comment this line to stop rotation too.
+            s.odom.x = x
+            s.odom.y = y
+            s.odom.yaw = yaw_new  # rotate in place on collision
+
+            # Stop linear motion
+            self.vx_body = 0.0
+            s.odom.vx = 0.0
+            s.odom.vy = 0.0
+            s.joints.velocities[0] = 0.0
+            s.joints.velocities[1] = 0.0
+        else:
+            # Free space: commit the move
+            s.odom.x = x_new
+            s.odom.y = y_new
+            s.odom.yaw = yaw_new
 
         # Update wheel positions
         # s.joints.positions += s.joints.velocities * dt
@@ -296,7 +358,7 @@ class SimEngine:
 
         # Half-angle in radians
         half_fov = math.radians(self.cam_fov / 2)
-        max_range = 6.0  # detection limit
+        max_range = self.camera_range  # detection limit
 
         rel_poses = []
         rel_ids = []

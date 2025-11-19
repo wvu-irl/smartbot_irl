@@ -1,8 +1,8 @@
 """Package pydoc for smartbot_irl.data"""
 
 from ._data import Command, SensorData, list_sensor_columns
-from ._data_logging import State, timestamp
-from ._type_maps import IMU, Bool, JointState, LaserScan, Pose, PoseArray, ArucoMarkers
+from ._data_logging import States, timestamp
+from ._type_maps import IMU, Bool, JointState, LaserScan, Pose, PoseArray, ArucoMarkers, String
 
 
 __all__ = [
@@ -13,7 +13,8 @@ __all__ = [
     'PoseArray',
     'IMU',
     'Bool',
-    'State',
+    'States',
     'JointState',
     'timestamp',
+    'String',
 ]

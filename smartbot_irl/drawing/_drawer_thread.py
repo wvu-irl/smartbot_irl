@@ -61,11 +61,7 @@ class Drawer:
         return sx, sy
 
     def draw_once(self, dt: float = 0.01):
-        """Call this every frame from your main loop."""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self._running = False
-
+        """Draws everything the robot can see."""
         d = self._get()
 
         scan = d.scan

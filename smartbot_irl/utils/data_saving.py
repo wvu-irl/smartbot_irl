@@ -2,7 +2,7 @@ from pathlib import Path
 
 from smartbot_irl.utils.smart_logging import SmartLogger, logging
 from ..data._data_logging import timestamp
-from ..data import State
+from ..data import States
 import sys
 
 logger = SmartLogger(level=logging.WARN)  # Print statements, but better!
@@ -15,7 +15,7 @@ def get_log_dir(log_dir_name='smart_logs') -> Path:
     return log_dir
 
 
-def save_data(states: State, params, log_filename='smart') -> Path:
+def save_data(states: States, params, log_filename='smart') -> Path:
     # Path of dir containing main script.
     script_dir = Path(sys.argv[0]).resolve().parent
 

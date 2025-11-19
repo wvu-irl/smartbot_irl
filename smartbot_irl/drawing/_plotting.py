@@ -311,16 +311,9 @@ class PlotManager:
 
         plt.show(block=False)  # Make our plots appear.
         while True:
-            # Get data from queue
-            # try:
-            #     data = data_queue.get(timeout=0.02)
-            # except queue.Empty:
-            #     plt.pause(0.001)
-            #     continue
-
             # Pull oldest item if available
             if len(self.buffer) == 0:
-                plt.pause(0.001)
+                plt.pause(0.01)
                 continue
 
             data = self.buffer.pop(0)
@@ -335,7 +328,7 @@ class PlotManager:
                 fw.update(df_last_row=data)
                 fw.redraw_if_needed()
             # logger.warn('Looping draw')
-            # sleep(0.001)
+            sleep(0.001)
 
         if self.leave_plots:
             logger.info('Leaving plots open')
