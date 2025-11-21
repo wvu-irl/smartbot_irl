@@ -4,6 +4,22 @@ from ..data import Command, SensorData
 # from ..sim2d.engine import SimEngine
 
 
+class SmartBotBackend(ABC):
+    def __init__(self) -> None: ...
+
+    @abstractmethod
+    def read(self) -> SensorData: ...
+    @abstractmethod
+    def write(self, command: Command) -> None:
+        """Send commands to the underlying system sim/real."""
+
+    @abstractmethod
+    def shutdown(self) -> None: ...
+    # Non-mandatory extensions.
+    def place_hex(self, *a, **kw):
+        raise NotImplementedError
+
+
 class SmartBotBase(ABC):
     """Abstract base defining the robot interface."""
 

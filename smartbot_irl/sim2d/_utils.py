@@ -1,3 +1,12 @@
+from ._components import (
+    Body,
+    DiffDriveWheels,
+    DiffDriveWheelsEncoders,
+    IMU,
+    Lidar,
+)
+
+
 def make_arena(
     width: float = 5.0, height: float = 5.0, thickness: float = 1000.0
 ) -> list[list[float]]:
@@ -15,3 +24,13 @@ def make_arena(
         [-width - thickness, height + thickness, width, height],  # top wall
     ]
     return obstacles
+
+
+def robot_components():
+    return (
+        Body(),
+        DiffDriveWheels(),
+        DiffDriveWheelsEncoders(),
+        IMU(),
+        Lidar(),
+    )

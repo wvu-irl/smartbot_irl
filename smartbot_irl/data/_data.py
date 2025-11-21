@@ -189,12 +189,12 @@ class Command:
 
     def __init__(
         self,
-        wheel_vel_left: float | None = None,
-        wheel_vel_right: float | None = None,
-        linear_vel: float | None = None,
-        angular_vel: float | None = None,
-        gripper_closed: bool | None = None,
-        manipulator_presets: str | None = None,
+        wheel_vel_left: float = 0.0,
+        wheel_vel_right: float = 0.0,
+        linear_vel: float = 0.0,
+        angular_vel: float = 0.0,
+        gripper_closed: bool = False,
+        manipulator_presets: str = 'STOW',
     ) -> None:
         # safe attribute initialization
         self.wheel_vel_left = wheel_vel_left

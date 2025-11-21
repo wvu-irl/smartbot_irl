@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from ..data import Command, SensorData
 from ..data import Pose, PoseArray, ArucoMarkers
-from .utils import make_arena
+from ._utils import make_arena
 
 # from ..robot import SmartBotType
 import random
