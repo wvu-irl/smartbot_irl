@@ -126,7 +126,7 @@ class Drawer:
                 self.screen.blit(label, (mx + 8, my))
 
         # Draw robot body
-        pygame.draw.circle(self.screen, (255, 230, 0), (cx, cy), 0.3 * self.scale)
+        pygame.draw.circle(self.screen, (255, 230, 0), (cx, cy), 0.1 * self.scale)
 
         # Draw heading line
         hx = cx + int(0.5 * self.scale * math.cos(theta))

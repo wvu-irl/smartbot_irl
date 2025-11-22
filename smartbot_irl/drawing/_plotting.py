@@ -288,13 +288,6 @@ class PlotManager:
             fw.update(df_last_row=data)
             fw.redraw_if_needed()
 
-        # def update_queue(self, data: pd.Series):
-        #     """Append series to data queue"""
-        #     try:
-        #         self.data_queue.put_nowait(data)
-        #     except queue.Full:
-        #         pass
-
     def update_queue(self, data: pd.Series):
         buf = self.buffer
         # evict oldest if at capacity
@@ -342,30 +335,20 @@ class PlotManager:
             plt.close()
 
     def start_plot_proc(self):
-        # self.plot_proc = Process(target=self.draw_plots, args=(self.data_queue, self.figures))
+        """_summary_"""
         self.plot_proc = Process(target=self.draw_plots, args=(None, self.figures))
 
-        # try:
         self.plot_proc.start()
-        # except KeyboardInterrupt:
-        #     logger.info('Stopping plot process...')
-        # except Exception as e:
-        #     logger.info('Crash!')
-        # finally:
-        #     plot_proc.kill()
-        #     plot_proc.close()
 
     def stop_plot_proc(self):
-        # 1. Flush the queue completely
+        # Empty queue.
         try:
-            # while True:
-            #     self.data_queue.get_nowait()
-            #     logger.warn('Flushed queue once')
-            self.buffer[:] = []  # clear ring buffer
+            self.buffer[:] = []
         except Exception:
             pass
 
-        # 2. Send STOP
+        # Send 'STOP' on queue.
+        # TODO Less hacky solution? Mixing types in queue here.
         try:
             logger.info('Sending stop to plot process...')
             self.data_queue.put_nowait(STOP_SIGNAL)
@@ -373,10 +356,10 @@ class PlotManager:
             pass
         logger.warn('Joining child proc...')
 
-        # 3. Give child time to exit cleanly
+        # Wait for plotting proc to die.
         self.plot_proc.join(timeout=0.3)
 
-        # 4. If still alive → terminate
+        # IF it doesn't stop kill it.
         if self.plot_proc.is_alive():
             logger.warn('Terminating child proc...')
             self.plot_proc.terminate()
@@ -384,9 +367,6 @@ class PlotManager:
 
     def show_plots(self) -> None:
         plt.show(block=False)  # Make our plots appear.
-
-    # self.plot_proc.start()
-    # self.plot_proc.join()
 
 
 def start_plot_proc(pm: PlotManager): ...

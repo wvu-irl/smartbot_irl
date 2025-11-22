@@ -17,7 +17,7 @@ class DiffDriveWheels(Component):
     w_r: float = 0.0
     theta_l: float = 0.0
     theta_r: float = 0.0
-    wheel_radius: float = 1.0
+    wheel_radius: float = 0.125
     wheel_base: float = 0.3
 
 

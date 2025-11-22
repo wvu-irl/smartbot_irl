@@ -45,7 +45,11 @@ class SmartBotSim2d(SmartBotBackend):
 
     def read(self) -> SensorData:
         # Get sensor data from sim.
-        logger.debug('Getting sensor data from sim2d', rate=5)
+        # logger.debug('Getting sensor data from sim2d', rate=5)
+        # # Always read latest sensor packet first
+        # msg = self.read()
+        # if msg is not None:
+        #     self.sensor_data = msg
         try:
             self.sensors = self.out_queue.get_nowait()
             # logger.debug(self.sensors, rate=4)
@@ -54,10 +58,16 @@ class SmartBotSim2d(SmartBotBackend):
         return self.sensors
 
     def spin(self, dt: float = 0.05) -> None:
-        logger.info('Sim2d spinning!')
-        if dt < 1e6:
-            dt = 0.01
+        # read latest data if available
+        try:
+            msg = self.out_queue.get_nowait()
+            self.sensor_data = msg
+        except Empty:
+            pass
+
+        # now draw
         if self.drawer and self.drawer._running:
+            logger.info('drawing!', rate=1)
             self.drawer.draw_once(dt)
 
     def shutdown(self) -> None:

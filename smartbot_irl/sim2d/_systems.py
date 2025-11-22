@@ -1,7 +1,21 @@
 from queue import Empty
 
-from ..data import SensorData, Command
-from ._components import IMU, Body, DiffDriveWheels, DiffDriveWheelsEncoders
+import smartbot_irl.data as data
+
+# from ..data import (
+#     SensorData,
+#     Command,
+#     IMU,
+#     Bool,
+#     JointState,
+#     LaserScan,
+#     Pose,
+#     PoseArray,
+#     ArucoMarkers,
+#     String,
+#     Odometry,
+# )
+from ._components import IMU, Body, DiffDriveWheels, DiffDriveWheelsEncoders, Lidar
 import numpy as np
 from ..utils.smart_logging import SmartLogger, logging
 
@@ -67,19 +81,35 @@ class GetInput:
 
     def update(self, wheels, dt) -> None:
         try:
-            logger.debug(f'command_queue: {cmd}', rate=5)
-            cmd: Command = self.cmd_queue.get_nowait()  # will return None if empty
+            cmd: data.Command = self.cmd_queue.get_nowait()  # will return None if empty
+            logger.debug(f'command_queue: {cmd.linear_vel}', rate=5)
+
         except Empty:
             return
 
-        wheels.w_l = cmd.wheel_vel_left
-        wheels.w_r = cmd.wheel_vel_right
+        # Do kinematics.
+        v = cmd.linear_vel
+        w = cmd.angular_vel
+        r = 0.125
+        L = 0.3
+
+        # v = (r/2) * (wl + wr)
+        # w = (r/L) * (wr - wl)
+        w_l = (v - 0.5 * L * w) / r
+        w_r = (v + 0.5 * L * w) / r
+
+        wheels.w_l = w_l
+        wheels.w_r = w_r
+
+        # Only if we want to make wheel vels directly the command
+        # wheels.w_l = cmd.wheel_vel_left
+        # wheels.w_r = cmd.wheel_vel_right
 
 
 class Read:
     """Packages sim sensor data and sends to an external output queue."""
 
-    components = (Body, DiffDriveWheels, IMU)
+    components = (Body, DiffDriveWheels, IMU, Lidar)
 
     def __init__(self, world, out_queue, publish_rate_hz=10.0) -> None:
         self.out_queue = out_queue
@@ -87,7 +117,9 @@ class Read:
         self.next_pub_time = 0.0
         self.world = world
 
-    def update(self, body: Body, wheels: DiffDriveWheels, imu: IMU, dt: float) -> None:
+    def update(
+        self, body: Body, wheels: DiffDriveWheels, imu: IMU, lidar: Lidar, dt: float
+    ) -> None:
         """Returns a SensorData object from simulation.
 
         Parameters
@@ -109,10 +141,18 @@ class Read:
         self.next_pub_time = self.world.time + self.period
 
         # TODO Completely fill out sensordata.
-        sensor_data = SensorData()
+        sensor_data = data.SensorData()
         sensor_data.odom.x = body.pos_x
         sensor_data.odom.y = body.pos_y
         sensor_data.odom.yaw = body.theta
+
+        sensor_data.scan = data.LaserScan()
+        sensor_data.scan.ranges = lidar.ranges
+        sensor_data.scan.angle_increment = 0.05
+        sensor_data.scan.angle_max = lidar.end_angle
+        sensor_data.scan.angle_min = lidar.start_angle
+
+        sensor_data.imu = data.IMU()
 
         # msg = {
         #     'time': self.world.time,
@@ -137,6 +177,55 @@ class Read:
         #     },
         # }
         self.out_queue.put(sensor_data)
+
+
+class LidarSystem(System):
+    components = (Body, Lidar)
+
+    def update(self, body: Body, lidar: Lidar, dt: float):
+        #
+        # Just output max ranges for now.
+
+        angles = np.linspace(lidar.start_angle, lidar.end_angle, lidar.num_rays)
+        ranges = np.ones_like(angles)
+
+        x0 = body.pos_x
+        y0 = body.pos_y
+        yaw = body.theta
+
+        for i, a in enumerate(angles):
+            # Convert local beam angle -> world angle
+            beam_angle = yaw + a
+
+            # Ray direction
+            dx = np.cos(beam_angle)
+            dy = np.sin(beam_angle)
+
+            # # March forward until hit or max distance
+            # r = 0.0
+            # step = 0.05  # resolution
+
+            # hit_range = lidar.max_range
+
+            # # Loop until out of range
+            # while r < lidar.max_range:
+            #     px = x0 + r * dx
+            #     py = y0 + r * dy
+
+            #     # Collision check
+            #     for (xmin, xmax, ymin, ymax) in lidar.world.obstacles:
+            #         if xmin <= px <= xmax and ymin <= py <= ymax:
+            #             hit_range = r
+            #             break
+
+            #     if hit_range != lidar.max_range:
+            #         break
+
+            #     r += step
+
+            # ranges[i] = hit_range
+
+        lidar.ranges = 10 * ranges
 
 
 class DebugPrint:
