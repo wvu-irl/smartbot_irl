@@ -153,6 +153,9 @@ class Read:
         sensor_data.scan.angle_min = lidar.start_angle
 
         sensor_data.imu = data.IMU()
+        sensor_data.imu.ax = imu.ax
+        sensor_data.imu.ay = imu.ay
+        sensor_data.imu.wz = imu.wz
 
         # msg = {
         #     'time': self.world.time,

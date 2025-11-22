@@ -60,7 +60,7 @@ class Drawer:
         sy = int((self.ymax - y) * self.scale)
         return sx, sy
 
-    def draw_once(self, dt: float = 0.01):
+    def draw_once(self, dt: float = 0.001):
         """Draws everything the robot can see."""
         d = self._get()
 
