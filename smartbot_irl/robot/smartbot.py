@@ -28,7 +28,7 @@ class SmartBot:
     ):
         if mode == 'real':
             if ip is None or smartbot_num == 0:
-                logger.error('Please specify robot IP')
+                logger.error('Please specify robot IP and smartbot number')
                 return
             self.backend = SmartBotReal(
                 draw_region=draw_region, smartbot_num=smartbot_num, drawing=drawing, ip=ip
@@ -60,83 +60,3 @@ class SmartBot:
     def place_hex(self, *a, **kw):
         # Does nothing for real robot
         raise NotImplementedError
-
-
-# @overload
-# def SmartBot(mode: Literal['real'], drawing: bool = False, **kwargs) -> SmartBotReal: ...
-
-
-# @overload
-# def SmartBot(mode: Literal['sim'], drawing: bool = False, **kwargs) -> SmartBotSim: ...
-
-
-# def SmartBot(
-#     mode: str = 'real', drawing: bool = False, **kwargs
-# ) -> Union[SmartBotReal, SmartBotSim]:
-#     """
-#     Create either a real or simulated SmartBot.
-
-#     Parameters
-#     ----------
-#         mode : {'real', 'sim'}, optional
-#             Which engine to construct.
-
-#             * ``'real'`` → :class:`~smartbot_irl.robot.SmartBotReal`
-#             * ``'sim'`` → :class:`~smartbot_irl.robot.SmartBotSim`
-
-#         drawing : bool, optional
-#             Enable drawing or visualization.
-
-#         **kwargs
-#             Passed directly to the selected engine constructor.
-
-#     Returns
-#     -------
-#         SmartBotReal or SmartBotSim
-
-
-#     Examples
-#     --------
-#         >>> bot = SmartBot('sim')
-#         >>> bot = SmartBot('real')
-#     """
-#     if mode == 'sim':
-#         return SmartBotSim(drawing=drawing, **kwargs)
-#     else:
-#         return SmartBotReal(drawing=drawing, **kwargs)
-
-
-# def SmartBot(
-#     mode: str = 'sim2d', drawing: bool = False, **kwargs
-# ) -> Union[SmartBotReal, SmartBotSim]:
-#     """
-#     Create either a real or simulated SmartBot.
-
-#     Parameters
-#     ----------
-#         mode : {'real', 'sim2d', 'mujo'}, optional
-#             Which engine to use..
-
-#             * ``'real'`` Real ros2 robot
-#             * ``'sim2d'`` 2D simulator
-#             * ``'mujo'`` Mujoco based simulator
-
-#         drawing : bool, optional
-#             Enable drawing or visualization.
-
-#         **kwargs
-#             Passed directly to the selected engine constructor.
-
-#     Returns
-#     -------
-#         SmartBotReal or SmartBotSim
-
-#     Examples
-#     --------
-#         >>> bot = SmartBot('sim2d')
-#         >>> bot = SmartBot('real')
-#     """
-#     if mode == 'sim':
-#         return SmartBotSim(drawing=drawing, **kwargs)
-#     else:
-#         return SmartBotReal(drawing=drawing, **kwargs)

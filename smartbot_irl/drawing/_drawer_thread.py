@@ -2,6 +2,9 @@ import math
 import pygame
 from typing import Callable
 from ..data import SensorData
+from ..utils import SmartLogger, logging
+
+logger = SmartLogger(level=logging.DEBUG)  # Print statements, but better!
 
 
 class Drawer:
@@ -79,6 +82,7 @@ class Drawer:
 
         # Data Source is raw lidar.
         if scan.ranges:
+            logger.debug('Drawing lidar scan...')
             # Precompute angles
             n = len(scan.ranges)
             angles = [scan.angle_min + i * scan.angle_increment for i in range(n)]

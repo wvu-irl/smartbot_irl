@@ -54,8 +54,6 @@ class SmartBotReal(SmartBotBackend):
     def __init__(
         self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5)), ip=None
     ) -> None:
-        # super().__init__(drawing=drawing, draw_region=draw_region)
-
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
         self.smartbot_num = smartbot_num
@@ -180,6 +178,7 @@ class SmartBotReal(SmartBotBackend):
         msgs = cmd._to_ros()
 
         if 'geometry_msgs/Twist' in msgs:
+            logger.debug(f'Cmd pubbing {msgs["geometry_msgs/Twist"]}')
             self.cmd_vel_pub.publish(roslibpy.Message(msgs['geometry_msgs/Twist']))
 
         if 'std_msgs/String' in msgs:
