@@ -21,7 +21,6 @@ class SmartBotSim2d(SmartBotBackend):
     def __init__(
         self, drawing=True, smartbot_num=0, draw_region=((-5, 5), (-5, 5)), **kwargs
     ) -> None:
-        # self.sensor_data = SensorData()
         self.sensor_data = SensorData()
         self.drawer = Drawer(sensor_getter=self._get_data, region=draw_region) if drawing else None
 
@@ -35,8 +34,6 @@ class SmartBotSim2d(SmartBotBackend):
             target=run_sim, args=(self.cmd_queue, self.out_queue), daemon=True
         )
         self.sim_proc.start()
-
-    # def init(self, **kwargs) -> None:
 
     def write(self, cmd: Command) -> None:
         self.cmd_queue.put_nowait(cmd)
@@ -63,7 +60,7 @@ class SmartBotSim2d(SmartBotBackend):
 
         # now draw
         if self.drawer and self.drawer._running:
-            logger.info(f'drawing! {self.sensor_data.odom.x}', rate=1)
+            logger.debug(f'drawing! {self.sensor_data.odom.x}', rate=1)
             self.drawer.draw_once(dt)
 
     def shutdown(self) -> None:

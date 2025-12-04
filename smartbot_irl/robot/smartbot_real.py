@@ -6,7 +6,7 @@ from typing import Optional
 
 import yaml
 
-from .smartbot_base import SmartBotBase
+from .smartbot_base import SmartBotBackend, SmartBotBase
 
 from ..data import (
     ArucoMarkers,
@@ -45,14 +45,16 @@ class NullEngine:
         return None
 
 
-class SmartBotReal(SmartBotBase):
+class SmartBotReal(SmartBotBackend):
     """
     Wrapper for the real robot's ros2 system.
     """
 
     # def __init__(self, drawing=(), smartbot_num=0,) -> None:
-    def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))) -> None:
-        super().__init__(drawing=drawing, draw_region=draw_region)
+    def __init__(
+        self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5)), ip=None
+    ) -> None:
+        # super().__init__(drawing=drawing, draw_region=draw_region)
 
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
@@ -85,6 +87,8 @@ class SmartBotReal(SmartBotBase):
         self.manipulator_presets_pub: Optional[roslibpy.Topic] = None
         self.gripper_closed_pub: Optional[roslibpy.Topic] = None
         self.place_hex_pub: Optional[roslibpy.Topic] = None
+
+        self.init(host=str(ip), port=9090)
 
     def init(self, host: str = 'localhost', port: int = 9090, yaml_path=None) -> None:
         """Connect the smartbot wrapper to a real smartbot.

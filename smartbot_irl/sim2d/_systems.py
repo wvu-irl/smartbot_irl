@@ -1,3 +1,5 @@
+"""Generic reusable systems."""
+
 from queue import Empty
 
 import smartbot_irl.data as data

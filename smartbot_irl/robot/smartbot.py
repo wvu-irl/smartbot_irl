@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
+import logging
 from typing import Type
+
+from smartbot_irl.utils import SmartLogger
 from ..data import SensorData
 from typing import overload, Literal, Union
 
@@ -10,10 +13,13 @@ from .smartbot_base import SmartBotBase
 
 from ..data import Command
 
+logger = SmartLogger(level=logging.DEBUG)  # Print statements, but better!
+
 
 class SmartBot:
     def __init__(
         self,
+        ip: str | None = None,
         mode='sim2d',
         drawing=False,
         smartbot_num=0,
@@ -21,7 +27,12 @@ class SmartBot:
         **kwargs,
     ):
         if mode == 'real':
-            self.backend = SmartBotReal()
+            if ip is None or smartbot_num == 0:
+                logger.error('Please specify robot IP')
+                return
+            self.backend = SmartBotReal(
+                draw_region=draw_region, smartbot_num=smartbot_num, drawing=drawing, ip=ip
+            )
         elif mode == 'sim2d':
             self.backend = SmartBotSim2d()
 
