@@ -97,7 +97,7 @@ class Pose:
                 ori.get('w', 1.0),
             ]
         )
-        roll, pitch, yaw = R.from_quat(q).as_euler('xyz', degrees=False)
+        roll, pitch, yaw = R.from_quat(q, scalar_first=False).as_euler('xyz', degrees=False)
         return cls(
             x=pos.get('x', 0.0),
             y=pos.get('y', 0.0),

@@ -181,7 +181,11 @@ class FigureWrapper:
                 xbufs, ybufs = buffers[i]
                 line_list = artists[i]
 
-                raw = df_last_row[ycol]
+                try:
+                    raw = df_last_row[ycol]
+                except KeyError:
+                    logger.warn('No data to plot yet...')
+                    return
 
                 # Normalize input into a list of floats
                 if np.isscalar(raw):

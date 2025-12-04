@@ -23,9 +23,6 @@ class SmartBotBackend(ABC):
 class SmartBotBase(ABC):
     """Abstract base defining the robot interface."""
 
-    # engine: SimEngine | None
-    """Underlying simulation engine (sim backends only)."""
-
     def __init__(self, draw_region: Tuple = ((0, 0), (3, 3)), drawing=False):
         self.drawing = drawing
 

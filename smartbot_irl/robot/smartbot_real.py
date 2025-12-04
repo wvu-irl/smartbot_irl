@@ -6,29 +6,29 @@ from typing import Optional
 
 import yaml
 
-from .smartbot_base import SmartBotBackend, SmartBotBase
-
 from ..data import (
-    ArucoMarkers,
-    Odometry,
-    LaserScan,
-    JointState,
-    PoseArray,
     IMU,
+    ArucoMarkers,
     Bool,
+    JointState,
+    LaserScan,
+    Odometry,
+    PoseArray,
     String,
 )
+from .smartbot_base import SmartBotBackend, SmartBotBase
 
 os.environ['AUTOBAHN_USE_NVX'] = '0'
+import logging
 import threading
 from dataclasses import dataclass, field
 
 import roslibpy
 
+from smartbot_irl.utils import SmartLogger
+
 from ..data import Command, Pose, SensorData
 from ..drawing import Drawer
-from smartbot_irl.utils import SmartLogger
-import logging
 
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
@@ -105,7 +105,7 @@ class SmartBotReal(SmartBotBackend):
         prefix = f'/smartbot{self.smartbot_num}'
         self._running = True
 
-        self.engine: None = NullEngine
+        # self.engine: None = NullEngine
 
         # Connect to ros bridge server. Give up after 5s.
         logger.info(msg='Connecting to smartbot...')
@@ -120,11 +120,13 @@ class SmartBotReal(SmartBotBackend):
             raise RuntimeError('Failed to connect to rosbridge_server.')
 
         # Set up publishers.
-        # TODO move into yaml.
+        # TODO move into yaml
+        logger.debug(f'Pubbing to : {prefix + "/cmd_vel"}', rate=2)
         self.cmd_vel_pub = roslibpy.Topic(
             ros=self.client,
             name=prefix + '/cmd_vel',
             message_type='geometry_msgs/Twist',
+            queue_length=1,
         )
         self.manipulator_presets_pub = roslibpy.Topic(
             ros=self.client,
@@ -178,7 +180,7 @@ class SmartBotReal(SmartBotBackend):
         msgs = cmd._to_ros()
 
         if 'geometry_msgs/Twist' in msgs:
-            logger.debug(f'Cmd pubbing {msgs["geometry_msgs/Twist"]}')
+            logger.debug(f'Cmd pubbing {msgs["geometry_msgs/Twist"]}', rate=2)
             self.cmd_vel_pub.publish(roslibpy.Message(msgs['geometry_msgs/Twist']))
 
         if 'std_msgs/String' in msgs:
@@ -193,6 +195,7 @@ class SmartBotReal(SmartBotBackend):
 
     def spin(self, dt: float = 0.01) -> None:
         """"""
+        logger.debug('Spinning real robot', rate=2)
         if not self.client or not self.client.is_connected:
             raise RuntimeError('ROSBridge client not connected.')
         if self.drawer and self.drawer._running:
