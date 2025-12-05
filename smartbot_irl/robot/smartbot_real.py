@@ -51,6 +51,10 @@ class SmartBotReal(SmartBotBase):
 
         # Specify which topics and their types we will subscribe to.
         self.sensor_data = SensorData()
+
+        # How long before a field is considered stale
+        # self._timeout_sec = 0.25  # adjust per sensor if needed
+
         self._topic_map = {  # "<ros2_topic_name>": (<type_maps.Pose>, "<SensorData.field>")
             'odom': (Odometry, 'odom'),
             'scan': (LaserScan, 'scan'),
@@ -65,6 +69,22 @@ class SmartBotReal(SmartBotBase):
 
         # Keep a list of our connected topics.
         self._subscriptions: list[roslibpy.Topic] = []
+
+        # Track last time we received a message for each SensorData field.
+        self._last_msg_time: dict[str, float] = {
+            field_name: 0.0 for (_, field_name) in self._topic_map.values()
+        }
+        self._timeout_sec = {
+            'scan': 5.0,  # LiDAR needs a generous timeout
+            'odom': 5.0,
+            'joints': 1.0,
+            'aruco_poses': 0.5,
+            'imu': 0.25,
+            'gripper_curr_state': 3.0,
+            'manipulator_curr_preset': 3.0,
+            'seen_robots': 0.5,
+            'seen_hexes': 0.5,
+        }
 
         # Publishers.
         self.cmd_vel_pub: Optional[roslibpy.Topic] = None
@@ -124,11 +144,25 @@ class SmartBotReal(SmartBotBase):
         )
 
         # Set up subscribers.
+        # for name, (cls, field_name) in self._topic_map.items():
+        #     topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
+        #     topic.subscribe(
+        #         lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c.from_ros(msg))
+        #     )
+        def make_callback(field_name, cls):
+            def cb(msg):
+                # update sensor field
+                setattr(self.sensor_data, field_name, cls.from_ros(msg))
+                # update timestamp
+                self._last_msg_time[field_name] = time.time()
+
+            return cb
+
         for name, (cls, field_name) in self._topic_map.items():
             topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
-            topic.subscribe(
-                lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c.from_ros(msg))
-            )
+            topic.subscribe(make_callback(field_name, cls))
+            self._subscriptions.append(topic)
+
         print(f'Subscribers and publishers found for {prefix}/* topics')
 
     def place_hex(self, x=None, y=None):
@@ -180,24 +214,43 @@ class SmartBotReal(SmartBotBase):
             self.gripper_closed_pub.publish(roslibpy.Message(msgs['std_msgs/Bool']))
 
     # -----------------------------------------------------------------
+    # def read(self) -> SensorData:
+    #     """Return the most recently received sensor data."""
+    #     ret = self.sensor_data
+    #     # Reset seen_hexes after a certain time of not getting a message for it.
+
+    #     self.sensor_data.seen_hexes = ArucoMarkers()
+    #     return ret
     def read(self) -> SensorData:
-        """Return the most recently received sensor data."""
-        return self.sensor_data
+        ret = self.sensor_data
+        now = time.time()
+
+        for field_name, last_time in self._last_msg_time.items():
+            timeout = self._timeout_sec.get(field_name, None)
+            if timeout is None:
+                continue
+
+            if last_time != 0.0 and (now - last_time > timeout):
+                data_type = type(getattr(self.sensor_data, field_name))
+                setattr(self.sensor_data, field_name, data_type())
+                self._last_msg_time[field_name] = 0.0
+
+        return ret
 
     # -----------------------------------------------------------------
-    def spin(self, dt: float = 0.01) -> None:
+    def spin(self, dt: float = 0.1) -> None:
         """"""
         if not self.client or not self.client.is_connected:
             raise RuntimeError('ROSBridge client not connected.')
         if self.drawer and self.drawer._running:
             self.drawer.draw_once(dt)
-        # time.sleep(dt)
 
     # -----------------------------------------------------------------
     def shutdown(self) -> None:
         """Cleanly disconnect all topics, publishers, and client."""
         print('Shutting down SmartBotReal...')
-
+        cmd = Command(wheel_vel_left=0.0, wheel_vel_right=0.0, linear_vel=0.0, angular_vel=0.0)
+        self.write(cmd)
         # Unsubscribe all topics.
         for topic in self._subscriptions:
             try:
