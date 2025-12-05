@@ -1,12 +1,11 @@
 # smartbot_sim.py
 from .smartbot_base import SmartBotBase
-import pygame
-import time
 import math
 from ..data import JointState, SensorData, Command
 from ..drawing import Drawer
 from ..sim2d.engine import SimEngine
-from ..sim2d.sensors import SimSensors
+
+# from ..sim2d.sensors import SimSensors
 from ..utils import SmartLogger
 import logging
 
@@ -18,7 +17,7 @@ class SmartBotSim(SmartBotBase):
         super().__init__(drawing=drawing, draw_region=draw_region)
         self.engine = SimEngine()
 
-        self.engine.add_obstacle(1.0, 0.0, 1.0, 0.5)
+        self.engine.add_obstacle(2.0, 0.0, 1.0, 0.5)
         self.engine.add_obstacle(-2.0, 2.0, 0.5, 0.5)
         self.engine.add_obstacle(-3.0, -2.0, 0.1, 2.5)
 

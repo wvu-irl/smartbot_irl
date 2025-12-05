@@ -74,6 +74,7 @@ class SensorData:
         self.seen_hexes: ArucoMarkers = ArucoMarkers()
         self.seen_robots: PoseArray = PoseArray()
 
+    # TODO: This isn't used anymore.
     @classmethod
     def initialized(cls) -> 'SensorData':
         """
@@ -141,12 +142,12 @@ class Command:
       - Manipulator preset and gripper control
     """
 
-    wheel_vel_left: Optional[float] = None
-    wheel_vel_right: Optional[float] = None
-    linear_vel: Optional[float] = None
-    angular_vel: Optional[float] = None
-    gripper_closed: Optional[bool] = None
-    manipulator_presets: Optional[str] = None
+    wheel_vel_left: float = 0.0
+    wheel_vel_right: float = 0.0
+    linear_vel: float = 0.0
+    angular_vel: float = 0.0
+    gripper_closed: bool = False
+    manipulator_presets: str = 'STOW'
 
     # -------------------------------------------------------------
     def to_ros(self) -> dict:

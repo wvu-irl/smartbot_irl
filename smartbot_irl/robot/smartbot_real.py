@@ -12,11 +12,10 @@ import roslibpy
 
 from smartbot_irl.utils import SmartLogger
 
-from ..data import Command, Pose, SensorData
+from ..data import Command, SensorData
 from ..data._type_maps import (
     IMU,
     ArucoMarkers,
-    Bool,
     JointState,
     LaserScan,
     Odometry,
@@ -162,6 +161,10 @@ class SmartBotReal(SmartBotBase):
             self._subscriptions.append(topic)
 
         print(f'Subscribers and publishers found for {prefix}/* topics')
+
+    def place_hex(self):
+        logger.error('Not implemented for real robots!')
+        # raise Exception(NotImplemented)
 
     def write(self, cmd: Command):
         """Publish the contents of :param:`cmd` to Ros2.

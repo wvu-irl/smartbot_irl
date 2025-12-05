@@ -50,9 +50,9 @@ class Drawer:
 
         pygame.init()
         self.screen = pygame.display.set_mode((win_w, win_h))
-        pygame.display.set_caption("SmartBot Viewer")
+        pygame.display.set_caption('SmartBot Viewer')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont("monospace", 16)
+        self.font = pygame.font.SysFont('monospace', 16)
         self._running = True
 
     def world_to_screen(self, x, y):
@@ -72,7 +72,7 @@ class Drawer:
         scan = d.scan
         # Check if we have received an odometry message yet.
         if d is None or d.odom is None or d.scan is None:
-            print("waiting for odom and scan...")
+            print('waiting for odom and scan...')
             return
         x, y, theta = d.odom.x, d.odom.y, d.odom.yaw
 
@@ -110,24 +110,23 @@ class Drawer:
                     pygame.draw.line(self.screen, (0, 255, 0), (cx, cy), (gx, gy), 1)
 
         # Draw ArUco markers if any
-        # markers = getattr(d, "aruco_poses", None)
-        # print(d.aruco_poses)
         if d.seen_hexes and d.seen_hexes.poses:
             markers = d.seen_hexes
             # print(markers)
             for pose, id in zip(markers.poses, markers.marker_ids):
-                # Marker is in robot frame → transform to world
+                # Transform marker pose from robot frame to odom frame.
                 rel_x, rel_y = pose.x, pose.y
                 mx_world = d.odom.x + math.cos(theta) * rel_x - math.sin(theta) * rel_y
                 my_world = d.odom.y + math.sin(theta) * rel_x + math.cos(theta) * rel_y
 
+                # TODO make this scale with window pixel size.
                 mx = 400 + int(self.scale * mx_world)
                 my = 400 - int(self.scale * my_world)
 
                 pygame.draw.rect(
                     self.screen, (255, 180, 0), pygame.Rect(mx - 6, my - 6, 12, 12), 7
                 )
-                label = self.font.render(f"{id}", True, (255, 163, 33))
+                label = self.font.render(f'{id}', True, (255, 163, 33))
                 self.screen.blit(label, (mx + 8, my))
 
         # Draw robot body
@@ -139,7 +138,7 @@ class Drawer:
         pygame.draw.line(self.screen, (255, 50, 50), (cx, cy), (hx, hy), 3)
 
         # Draw text overlay
-        pose_str = f"x={x:+.2f}  y={y:+.2f}  θ={theta:+.2f}"
+        pose_str = f'x={x:+.2f}  y={y:+.2f}  θ={theta:+.2f}'
         text_surf = self.font.render(pose_str, True, (180, 180, 180))
         self.screen.blit(text_surf, (10, 10))
 

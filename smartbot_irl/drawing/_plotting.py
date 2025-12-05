@@ -180,8 +180,11 @@ class FigureWrapper:
             for i, ycol in enumerate(y_col_list):
                 xbufs, ybufs = buffers[i]
                 line_list = artists[i]
-
-                raw = df_last_row[ycol]
+                try:
+                    raw = df_last_row[ycol]
+                except KeyError:
+                    logger.debug(f'No column for {ycol} yet!')
+                    return
 
                 # Normalize input into a list of floats
                 if np.isscalar(raw):
@@ -272,7 +275,7 @@ class PlotManager:
         self.data_queue = Queue(maxsize=1)
         self.leave_plots = leave_plots
 
-    def add_figure(self, max_fps=60, **kwargs):
+    def add_figure(self, max_fps=30, **kwargs):
         fw = FigureWrapper(max_fps=max_fps, **kwargs)
         self.figures.append(fw)
         return fw
@@ -300,7 +303,7 @@ class PlotManager:
         while True:
             # Get data from queue
             try:
-                data = data_queue.get(timeout=0.05)
+                data = data_queue.get(timeout=0.01)
             except queue.Empty:
                 plt.pause(0.001)
                 continue

@@ -1,15 +1,26 @@
 # engine.py
 import math
 import time
-from dataclasses import dataclass
 from ..data import Command, SensorData
+from ..data import Pose, ArucoMarkers
+
+from numpy import random
 
 
 class SimEngine:
     """Simple 2D differential-drive sim.
 
-    Returns:
-        _type_: _description_
+    Body frame: +X forward, +Y left, +Z Up. Yaw=0 => Front of robot
+         ^+X
+    +Y   |
+    <----|
+
+    Odom frame: World fixed at robot start position.
+
+    SensorData.odom is reported in odom frame poses
+
+    SensorData.seen_hexes is reported in body frame poses
+    SensorData.scan is reported in ranges relative to body frame
     """
 
     def __init__(self, wheel_base: float = 0.3):
@@ -29,7 +40,9 @@ class SimEngine:
             'ymax': 5.0,
         }
 
-        self.markers: list[tuple[float, float]] = [(2.0, 2.0)]  # initial marker(s)
+        self.markers: list[tuple[float, float]] = [(0.0, 0.0)]  # initial marker(s)
+        self.next_marker_id = 1
+        self.marker_ids = []
 
     # ------------------------------------------------------------------
     def apply_command(self, cmd: Command) -> None:
@@ -54,12 +67,12 @@ class SimEngine:
 
         s.odom.vx = (wl + wr) / 2.0
         s.odom.wz = (wr - wl) / self.wheel_base
-        s.manipulator_curr_preset = cmd.manipulator_presets
+        s.manipulator_curr_preset.data = cmd.manipulator_presets
 
         if cmd.gripper_closed:
-            s.gripper_curr_state = 'CLOSED'
+            s.gripper_curr_state.data = 'CLOSED'
         else:
-            s.gripper_curr_state = 'OPEN'
+            s.gripper_curr_state.data = 'OPEN'
 
     # ------------------------------------------------------------------
     def step(self, dt: float | None = None) -> SensorData:
@@ -87,6 +100,7 @@ class SimEngine:
         # s.joints.positions += s.joints.velocities * dt
         s.joints.positions = [p + v * dt for p, v in zip(s.joints.positions, s.joints.velocities)]
 
+        # I think I am treating the yaw as if it was in the body frame...
         if s.odom.yaw > math.pi:
             s.odom.yaw -= 2 * math.pi
         elif s.odom.yaw < -math.pi:
@@ -134,10 +148,8 @@ class SimEngine:
         accel_x = cy * ax_world - sy * ay_world
         accel_y = sy * ax_world + cy * ay_world
 
-        # add a bit of sensor noise
-        import random
-
-        noise = lambda s: s + random.gauss(0, 0.02)
+        def noise(s):
+            return s + random.normal(0, 0.02)
 
         s.imu.wz = noise(gyro_z)
         s.imu.ax = noise(accel_x)
@@ -187,7 +199,6 @@ class SimEngine:
         Returns:
             _type_: _description_
         """
-        import random
 
         def is_inside_obstacle(px: float, py: float, margin: float = 1) -> bool:
             """Check whether (px, py) is inside or too close to any obstacle."""
@@ -207,9 +218,8 @@ class SimEngine:
                 or (self.arena['ymax'] - py) < wall_margin
             )
 
-        # Robot position, used to avoid spawning too close
+        # Robot position, used to avoid spawning too close.
         rx, ry = self.state.odom.x, self.state.odom.y
-
         if x is not None and y is not None:
             if is_inside_obstacle(x, y):
                 print(
@@ -222,9 +232,10 @@ class SimEngine:
                 )
                 return
             self.markers = [(x, y)]
+
             return
 
-        # --- Random placement with obstacle rejection ---
+        # Try to place randomly inside bounds of world.
         max_attempts = 50
         buffer = 0.3
         for attempt in range(max_attempts):
@@ -235,8 +246,11 @@ class SimEngine:
             if is_inside_obstacle(x, y) or is_near_wall(x, y) or too_close_to_robot:
                 continue
 
-            # Valid spot
+            # Valid spot.
             self.markers = [(x, y)]
+            self.marker_ids.append(self.next_marker_id)
+            self.next_marker_id += 1
+
             print(f'Placed hex at ({x:.2f}, {y:.2f}) after {attempt + 1} attempts')
             return
 
@@ -244,7 +258,6 @@ class SimEngine:
 
     def _update_markers(self):
         """Compute marker poses relative to the robot body frame."""
-        from ..data import Pose, PoseArray, ArucoMarkers
 
         s = self.state
         rx, ry, rtheta = s.odom.x, s.odom.y, s.odom.yaw
@@ -253,11 +266,12 @@ class SimEngine:
         for mx, my in self.markers:
             dx = mx - rx
             dy = my - ry
-            # Transform from world to robot frame
+
+            # Transform from world to robot frame.
             rel_x = math.cos(-rtheta) * dx - math.sin(-rtheta) * dy
             rel_y = math.sin(-rtheta) * dx + math.cos(-rtheta) * dy
             rel_poses.append(Pose(x=rel_x, y=rel_y, z=0.0))
-        s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=[48] * len(rel_poses))
+            s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=self.marker_ids)
 
     def read_all(self):
         return self.state
