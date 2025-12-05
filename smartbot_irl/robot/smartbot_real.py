@@ -1,34 +1,30 @@
 # smartbot_real.py
 import os
-import time
-from pathlib import Path
-from typing import Optional
-
-import yaml
-
-from .smartbot_base import SmartBotBase
-from ..data._converters import ROS_TYPE_MAP
-from ..data._type_maps import (
-    ArucoMarkers,
-    Odometry,
-    LaserScan,
-    JointState,
-    PoseArray,
-    IMU,
-    Bool,
-    String,
-)
 
 os.environ['AUTOBAHN_USE_NVX'] = '0'
+
+import logging
 import threading
-from dataclasses import dataclass, field
+import time
+from typing import Optional
 
 import roslibpy
 
-from ..data import Command, Pose, SensorData
-from ..drawing import Drawer
 from smartbot_irl.utils import SmartLogger
-import logging
+
+from ..data import Command, Pose, SensorData
+from ..data._type_maps import (
+    IMU,
+    ArucoMarkers,
+    Bool,
+    JointState,
+    LaserScan,
+    Odometry,
+    PoseArray,
+    String,
+)
+from ..drawing import Drawer
+from .smartbot_base import SmartBotBase
 
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
@@ -52,10 +48,8 @@ class SmartBotReal(SmartBotBase):
         # Specify which topics and their types we will subscribe to.
         self.sensor_data = SensorData()
 
-        # How long before a field is considered stale
-        # self._timeout_sec = 0.25  # adjust per sensor if needed
-
-        self._topic_map = {  # "<ros2_topic_name>": (<type_maps.Pose>, "<SensorData.field>")
+        # "<ros2_topic_name>": (<type_maps.Pose>, "<SensorData.field>")
+        self._topic_map = {
             'odom': (Odometry, 'odom'),
             'scan': (LaserScan, 'scan'),
             'joint_states': (JointState, 'joints'),
@@ -74,11 +68,13 @@ class SmartBotReal(SmartBotBase):
         self._last_msg_time: dict[str, float] = {
             field_name: 0.0 for (_, field_name) in self._topic_map.values()
         }
+
+        # TODO make this adjustable. If timeout is faster than publish rate we get flickering data.
         self._timeout_sec = {
-            'scan': 5.0,  # LiDAR needs a generous timeout
+            'scan': 5.0,
             'odom': 5.0,
             'joints': 1.0,
-            'aruco_poses': 0.5,
+            'aruco_poses': 0.25,
             'imu': 0.25,
             'gripper_curr_state': 3.0,
             'manipulator_curr_preset': 3.0,
@@ -143,56 +139,38 @@ class SmartBotReal(SmartBotBase):
             'geometry_msgs/Pose',
         )
 
-        # Set up subscribers.
-        # for name, (cls, field_name) in self._topic_map.items():
-        #     topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
-        #     topic.subscribe(
-        #         lambda msg, f=field_name, c=cls: setattr(self.sensor_data, f, c.from_ros(msg))
-        #     )
         def make_callback(field_name, cls):
+            """
+            Make subscription callback and build dict of last reception time.
+            Use this to wipe out messages that have gone stale.
+            """
+
             def cb(msg):
-                # update sensor field
+                # Update sensor_data field.
                 setattr(self.sensor_data, field_name, cls.from_ros(msg))
-                # update timestamp
+                # Update specific data's timestamp used to clear stale data.
                 self._last_msg_time[field_name] = time.time()
 
             return cb
 
+        # Now actually make the callbacks and store them.
         for name, (cls, field_name) in self._topic_map.items():
-            topic = roslibpy.Topic(self.client, f'{prefix}/{name}', cls.ros_type)
-            topic.subscribe(make_callback(field_name, cls))
+            topic = roslibpy.Topic(
+                ros=self.client, name=f'{prefix}/{name}', message_type=cls.ros_type
+            )
+            topic.subscribe(callback=make_callback(field_name, cls))
             self._subscriptions.append(topic)
 
         print(f'Subscribers and publishers found for {prefix}/* topics')
 
-    def place_hex(self, x=None, y=None):
-        """Place a new hex marker at a random or specified world position."""
-        if not self.client or not self.client.is_connected:
-            print('Cannot place hex: ROSBridge not connected.')
-            return
-
-        if x is None or y is None:
-            # randomize within a 3x3 meter box centered at origin
-            import random
-
-            x = random.uniform(-3.0, 3.0)
-            y = random.uniform(-3.0, 3.0)
-
-        msg = {
-            'position': {'x': float(x), 'y': float(y), 'z': 0.0},
-            'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0},
-        }
-        self.place_hex_pub.publish(roslibpy.Message(msg))
-        print(f'Placed hex at ({x:.2f}, {y:.2f})')
-
-    # Publish messages.
     def write(self, cmd: Command):
         """Publish the contents of :param:`cmd` to Ros2.
 
-        Args:
-            cmd (:class:`smartbot_irl.Command`):
-                An instance of :class:`smartbot_irl.Command` which should
-                be populated with values to be published.
+        Parameters
+        ----------
+            cmd: :class:`smartbot_irl.Command`
+                An instance of :class:`smartbot_irl.Command` which should be
+                populated with values to be published.
         """
         if not self.client or not self.client.is_connected:
             print('Not connected to ROSBridge; cannot publish command.')
@@ -213,18 +191,23 @@ class SmartBotReal(SmartBotBase):
         if 'std_msgs/Bool' in msgs:
             self.gripper_closed_pub.publish(roslibpy.Message(msgs['std_msgs/Bool']))
 
-    # -----------------------------------------------------------------
-    # def read(self) -> SensorData:
-    #     """Return the most recently received sensor data."""
-    #     ret = self.sensor_data
-    #     # Reset seen_hexes after a certain time of not getting a message for it.
-
-    #     self.sensor_data.seen_hexes = ArucoMarkers()
-    #     return ret
     def read(self) -> SensorData:
-        ret = self.sensor_data
+        """Return current state of sensor data (after clearing stale fields).
+
+        Uses the per-topic timeout limit specified in
+        ``SmartBotReal._timeout_sec``and stored in
+        ::dict::`SmartBotReal._last_msg_time` to replace any given sensor data
+        attr with its initialized (empty) type. This is not the best way to
+        solve this problem.
+
+        Returns
+        -------
+        SensorData
+
+        """
         now = time.time()
 
+        # Check each topics time since last received and clear it if too long ago.
         for field_name, last_time in self._last_msg_time.items():
             timeout = self._timeout_sec.get(field_name, None)
             if timeout is None:
@@ -233,13 +216,20 @@ class SmartBotReal(SmartBotBase):
             if last_time != 0.0 and (now - last_time > timeout):
                 data_type = type(getattr(self.sensor_data, field_name))
                 setattr(self.sensor_data, field_name, data_type())
-                self._last_msg_time[field_name] = 0.0
+                self._last_msg_time[field_name] = 0.0  # Reset timer.
 
-        return ret
+        return self.sensor_data
 
     # -----------------------------------------------------------------
     def spin(self, dt: float = 0.1) -> None:
-        """"""
+        """
+        Handle miscellanous tasks: Drawing, checking RosBridge health, ...
+
+        Parameters
+        ----------
+        dt: float, default=0.1
+            (seconds) How fast to flip the pygame display (Doesn't really work...)
+        """
         if not self.client or not self.client.is_connected:
             raise RuntimeError('ROSBridge client not connected.')
         if self.drawer and self.drawer._running:
@@ -247,7 +237,7 @@ class SmartBotReal(SmartBotBase):
 
     # -----------------------------------------------------------------
     def shutdown(self) -> None:
-        """Cleanly disconnect all topics, publishers, and client."""
+        """Cleanly disconnect all topics, publishers, and rosbridge client."""
         print('Shutting down SmartBotReal...')
         cmd = Command(wheel_vel_left=0.0, wheel_vel_right=0.0, linear_vel=0.0, angular_vel=0.0)
         self.write(cmd)
@@ -287,26 +277,3 @@ class SmartBotReal(SmartBotBase):
 
         self._running = False
         print('SmartBotReal shutdown complete.')
-
-
-if __name__ == '__main__':
-    bot = SmartBotReal(drawing=False)
-    bot.init(host='localhost', port=9090)
-
-    cmd = Command(
-        wheel_vel_left=0.3,
-        wheel_vel_right=0.3,
-        gripper_closed=True,
-        linear_vel=1,
-        manipulator_presets='DOWN',
-    )
-
-    try:
-        while True:
-            bot.write(cmd)
-            data = bot.read()
-            print(data.__dict__.keys)
-            # print(f"Odom: x={data.pose_x:.2f}, y={data.pose_y:.2f}, θ={data.pose_theta:.2f}")
-            bot.spin(0.5)
-    except KeyboardInterrupt:
-        bot.shutdown()
