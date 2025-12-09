@@ -22,7 +22,7 @@ print('======================')
 project = 'SmartBot IRL'
 author = 'Nathaniel Pearson'
 release = '0.1'
-copyright = f'{datetime.now().year}, {author}'
+copyright = f''
 
 # ------------------------------------------------------------
 # Path setup
