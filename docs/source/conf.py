@@ -18,10 +18,10 @@ print("======================")
 # ------------------------------------------------------------
 # Project information
 # ------------------------------------------------------------
-project = "SmartBot IRL"
-author = "Nathaniel Pearson"
-release = "0.1"
-copyright = ""
+project = 'SmartBot IRL'
+author = 'Nathaniel Pearson'
+release = '0.1'
+copyright = f''
 
 # ------------------------------------------------------------
 # Path setup
