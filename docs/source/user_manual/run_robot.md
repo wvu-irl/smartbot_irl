@@ -5,9 +5,16 @@ Once we have our workspace setup and dependencies installed we are ready to make
 :depth: 3
 ```
 
-:::{warning}
+<!-- :::{warning}
 Starting and stopping the robots using VSC tasks is currently broken for windows. Try running the linux `bash` commands in gitbash for windows.
+::: -->
+
+
+:::{warning}
+Don't forget to switch to the `smartbot_lab_5` wifi network before starting/connecting to the smartbots!
+<img src='../_static/images/smartbot_lab_wifi_connect.PNG' style="max-width:100;  height:auto;">
 :::
+
 
 ## Start hardware interface on the robot
 

@@ -88,6 +88,13 @@ See the following gif for details if you are confused.
 
 <img src="../_static/images/win_py_manager_steps.png" style="max-width:600px; height:auto;">
 
+:::{note}
+You may or may not have to remove the deprecated 'Python Launcher' from your system
+:::
+
+<img src="../_static/images/python_launcher_uninstall.PNG" style="max-width:300px; max-height:200px;">
+
+
 Then install `python3.12` using the Python Install Manager by running the following command in a command prompt shell (CMD).
 
 ```bash
