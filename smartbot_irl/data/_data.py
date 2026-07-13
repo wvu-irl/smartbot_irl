@@ -147,7 +147,7 @@ class Command:
     linear_vel: float = 0.0
     angular_vel: float = 0.0
     gripper_closed: bool = False
-    manipulator_presets: str = 'STOW'
+    manipulator_presets: str = ''
 
     # -------------------------------------------------------------
     def to_ros(self) -> dict:

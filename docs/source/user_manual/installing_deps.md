@@ -77,6 +77,14 @@ See the following gif for details if you are confused.
 <br>
 
 ### Python install for windows
+:::{warning}
+Pygame is currently broken for python>3.12 on windows! If you see an error mentioning `distutils` ensure your shell is using `python3.12`
+```console
+python3.12 --version
+```
+<https://github.com/pypa/setuptools/issues/4612>
+:::
+
 
 - Install [Python Install Manager](https://www.python.org/downloads/release/pymanager-250/). This will install Python3.14 automatically
   - Choose `y` when prompted to add commands directory to your PATH

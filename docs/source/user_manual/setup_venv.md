@@ -63,6 +63,10 @@ TODO: Add video.
 
 
 ## Windows Virtual Environment
+:::{warning}
+Make sure your virtual environment (venv) is using `python3.12`! Pygame is a dependency of the project and is not working on python>3.12 on windows
+<https://github.com/pypa/setuptools/issues/4612>
+:::
 
 ### Option 1: Setting up a venv using VSCode Tasks
 If the "fast-tasks" extension is installed then a small section will appear in
@@ -76,6 +80,7 @@ process of creating the venv and installing packages.
 
 
 ### Option 2: Setting up a venv using the shell
+
 
 :::{note}
 Make sure to run the following commands from inside the top level of the `smartbot3_project_template` you cloned!
