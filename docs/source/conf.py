@@ -57,11 +57,11 @@ myst_enable_extensions = [
 ]
 
 
-autodoc_mock_imports = [
-    "matplotlib",
-    "numpy",
-    "pandas",
-]
+# autodoc_mock_imports = [
+#     "matplotlib",
+#     "numpy",
+#     "pandas",
+# ]
 
 # ------------------------------------------------------------
 # LaTeX (PDF) Output Configuration
