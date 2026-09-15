@@ -86,6 +86,7 @@ class SmartBotReal(SmartBotBase):
         self.manipulator_presets_pub: Optional[roslibpy.Topic] = None
         self.gripper_closed_pub: Optional[roslibpy.Topic] = None
         self.place_hex_pub: Optional[roslibpy.Topic] = None
+        self.pos_reset_pub: Optional[roslibpy.Topic] = None
 
     def init(self, host: str = 'localhost', port: int = 9090, yaml_path=None) -> None:
         """Connect the smartbot wrapper to a real smartbot.
@@ -137,6 +138,9 @@ class SmartBotReal(SmartBotBase):
             prefix + '/place_hex',
             'geometry_msgs/Pose',
         )
+        self.pos_reset_pub = roslibpy.Topic(
+            ros=self.client, name=prefix + '/pos_reset', message_type='example_interfaces/Bool'
+        )
 
         def make_callback(field_name, cls):
             """
@@ -182,6 +186,7 @@ class SmartBotReal(SmartBotBase):
         assert self.cmd_vel_pub is not None  # TODO make a mapping for this and loop for asserts.
         assert self.manipulator_presets_pub is not None
         assert self.gripper_closed_pub is not None
+        assert self.pos_reset_pub is not None
 
         msgs = cmd.to_ros()
 
@@ -193,6 +198,11 @@ class SmartBotReal(SmartBotBase):
 
         if 'std_msgs/Bool' in msgs:
             self.gripper_closed_pub.publish(roslibpy.Message(msgs['std_msgs/Bool']))
+
+        if 'example_interfaces/Bool' in msgs:
+            self.pos_reset_pub.publish(
+                message=roslibpy.Message(values=msgs['example_interfaces/Bool'])
+            )
 
     def read(self) -> SensorData:
         """Return current state of sensor data (after clearing stale fields).
@@ -253,7 +263,7 @@ class SmartBotReal(SmartBotBase):
         self._subscriptions.clear()
 
         # Stop publishers.
-        for pub in [self.cmd_vel_pub, self.gripper_closed_pub]:
+        for pub in [self.cmd_vel_pub, self.gripper_closed_pub, self.pos_reset_pub]:
             if pub:
                 try:
                     pub.unadvertise()

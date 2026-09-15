@@ -1,14 +1,12 @@
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ._type_maps import (
     IMU,
     ArucoMarkers,
-    Bool,
     JointState,
     LaserScan,
     Odometry,
-    Pose,
     PoseArray,
     String,
 )
@@ -142,12 +140,13 @@ class Command:
       - Manipulator preset and gripper control
     """
 
-    wheel_vel_left: float = 0.0
-    wheel_vel_right: float = 0.0
-    linear_vel: float = 0.0
-    angular_vel: float = 0.0
-    gripper_closed: bool = False
-    manipulator_presets: str = ''
+    wheel_vel_left: float | None = 0.0
+    wheel_vel_right: float | None = 0.0
+    linear_vel: float | None = 0.0
+    angular_vel: float | None = 0.0
+    gripper_closed: bool | None = None
+    manipulator_presets: str | None = None
+    reset_position: bool | None = None
 
     # -------------------------------------------------------------
     def to_ros(self) -> dict:
@@ -170,5 +169,9 @@ class Command:
         # gripper state (Bool)
         if self.gripper_closed is not None:
             msgs['std_msgs/Bool'] = {'data': bool(self.gripper_closed)}
+
+        # reset position (Bool)
+        if self.reset_position is not None:
+            msgs['example_interfaces/Bool'] = {'data': bool(self.reset_position)}
 
         return msgs
