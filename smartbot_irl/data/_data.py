@@ -146,7 +146,8 @@ class Command:
     angular_vel: float | None = 0.0
     gripper_closed: bool | None = None
     manipulator_presets: str | None = None
-    reset_position: bool | None = None
+    reset_position: bool = False
+    remove_bias: bool = False
 
     # -------------------------------------------------------------
     def to_ros(self) -> dict:
@@ -171,7 +172,10 @@ class Command:
             msgs['std_msgs/Bool'] = {'data': bool(self.gripper_closed)}
 
         # reset position (Bool)
-        if self.reset_position is not None:
-            msgs['example_interfaces/Bool'] = {'data': bool(self.reset_position)}
+        if self.reset_position:
+            msgs['example_interfaces/Bool'] = {'data': False}
+
+        if self.remove_bias:
+            msgs['example_interfaces/Bool'] = {'data': True}
 
         return msgs
