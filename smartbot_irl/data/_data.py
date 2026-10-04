@@ -96,24 +96,9 @@ class SensorData:
     def to_ros(self) -> dict:
         """Convert only populated fields to ROS-like dicts."""
         d = {}
-        if self.odom:
-            d['odom'] = self.odom.to_ros()
-        if self.scan:
-            d['scan'] = self.scan.to_ros()
-        if self.joints:
-            d['joints'] = self.joints.to_ros()
-        if self.aruco_poses:
-            d['aruco_poses'] = self.aruco_poses.to_ros()
-        if self.imu:
-            d['imu'] = self.imu.__dict__
-        if self.gripper_curr_state:
-            d['gripper_curr_state'] = self.gripper_curr_state.to_ros()
-        if self.manipulator_curr_preset:
-            d['manipulator_curr_preset'] = self.manipulator_curr_preset.to_ros()
-        if self.seen_hexes:
-            d['seen_hexes'] = self.seen_hexes.to_ros()
-        if self.seen_robots:
-            d['seen_robots'] = self.seen_robots.to_ros()
+        for name, val in self.__dict__.items():
+            if val is not None:
+                d[str(name)] = val.to_ros()
         return d
 
     def __repr__(self):

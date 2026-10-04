@@ -1,10 +1,10 @@
 # engine.py
 import math
 import time
-from ..data import Command, SensorData
-from ..data import Pose, ArucoMarkers
 
 from numpy import random
+
+from ..data import ArucoMarkers, Command, Pose, SensorData
 
 
 class SimEngine:
@@ -274,6 +274,12 @@ class SimEngine:
             s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=self.marker_ids)
 
     def read_all(self):
+        for name, val in self.state.__dict__.items():
+            try:
+                if val.stamp_sec is not None:
+                    val.stamp_sec = time.time()
+            except:
+                pass
         return self.state
 
     def reset(self):

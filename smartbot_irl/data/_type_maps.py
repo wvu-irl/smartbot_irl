@@ -1,9 +1,11 @@
 # smartbot_irl/data/type_maps.py
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, List, Dict
-from scipy.spatial.transform import Rotation as R
+from typing import Any, Dict, List
+
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 # ------------------------------------------------------------
@@ -43,6 +45,8 @@ class Pose:
     roll: float = 0.0
     pitch: float = 0.0
     yaw: float = 0.0
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict) -> Pose:
@@ -87,7 +91,7 @@ class Pose:
         )
 
     # TODO convert RPY back to quat?
-    def to_ros(self) -> dict[str, dict[str, float]]:
+    def to_ros(self) -> dict:
         """
         Create a ``geometry_msgs/Pose`` from a ROS ``Pose`` msg.
 
@@ -130,6 +134,8 @@ class Odometry:
     wx: float = 0.0
     wy: float = 0.0
     wz: float = 0.0
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict):
@@ -149,6 +155,7 @@ class Odometry:
         twist = msg.get('twist', {}).get('twist', {})
         lin = twist.get('linear', {})
         ang = twist.get('angular', {})
+        stamp = msg.get('header', {}).get('stamp', {})
 
         return cls(
             x=pos.get('x', 0.0),
@@ -167,6 +174,8 @@ class Odometry:
             wx=ang.get('x', 0.0),
             wy=ang.get('y', 0.0),
             wz=ang.get('z', 0.0),
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
         )
 
     def to_ros(self):
@@ -183,6 +192,9 @@ class Odometry:
                     'angular': {'x': self.wx, 'y': self.wy, 'z': self.wz},
                 }
             },
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
         }
 
 
@@ -191,14 +203,27 @@ class Odometry:
 class PoseArray:
     ros_type = 'geometry_msgs/PoseArray'
     poses: List[Pose] = field(default_factory=list)
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict):
+        stamp = msg.get('header', {}).get('stamp', {})
+
         poses = [Pose.from_ros(p) for p in msg.get('poses', [])]
-        return cls(poses=poses)
+        return cls(
+            poses=poses,
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
+        )
 
     def to_ros(self):
-        return {'poses': [p.to_ros() for p in self.poses]}
+        return {
+            'poses': [p.to_ros() for p in self.poses],
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
+        }
 
 
 # ------------------------------------------------------------
@@ -207,17 +232,30 @@ class ArucoMarkers:
     ros_type = 'ros2_aruco_interfaces/ArucoMarkers'
     poses: List[Pose] = field(default_factory=list)
     marker_ids: List[int] = field(default_factory=list)
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict):
+        stamp = msg.get('header', {}).get('stamp', {})
         poses = [Pose.from_ros(p) for p in msg.get('poses', [])]
         marker_ids = list(msg.get('marker_ids', []))
-        return cls(poses=poses, marker_ids=marker_ids)
+
+        return cls(
+            poses=poses,
+            marker_ids=marker_ids,
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
+        )
 
     def to_ros(self) -> dict[str, Any]:
+
         return {
             'poses': [p.to_ros() for p in self.poses],
             'marker_ids': list(self.marker_ids),
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
         }
 
 
@@ -255,14 +293,20 @@ class LaserScan:
     angle_min: float = 0.0
     angle_max: float = 0.0
     angle_increment: float = 0.0
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict):
+
+        stamp = msg.get('header', {}).get('stamp', {})
         return cls(
             ranges=msg.get('ranges', []),
             angle_min=msg.get('angle_min', 0.0),
             angle_max=msg.get('angle_max', 0.0),
             angle_increment=msg.get('angle_increment', 0.0),
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
         )
 
     def to_ros(self):
@@ -271,6 +315,9 @@ class LaserScan:
             'angle_min': self.angle_min,
             'angle_max': self.angle_max,
             'angle_increment': self.angle_increment,
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
         }
 
 
@@ -281,13 +328,18 @@ class JointState:
     names: List[str] = field(default_factory=list)
     positions: List[float] = field(default_factory=list)
     velocities: List[float] = field(default_factory=list)
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
 
     @classmethod
     def from_ros(cls, msg: dict):
+        stamp = msg.get('header', {}).get('stamp', {})
         return cls(
             names=msg.get('name', []),
             positions=msg.get('position', []),
             velocities=msg.get('velocity', []),
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
         )
 
     def to_ros(self):
@@ -295,6 +347,9 @@ class JointState:
             'name': self.names,
             'position': self.positions,
             'velocity': self.velocities,
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
         }
 
 
@@ -324,6 +379,9 @@ class IMU:
     ay: float = 0.0
     az: float = 0.0
 
+    stamp_sec: int = 0
+    stamp_nanosec: int = 0
+
     @classmethod
     def from_ros(cls, msg: dict):
         ori = msg.get('orientation', {})
@@ -341,6 +399,8 @@ class IMU:
 
         roll, pitch, yaw = R.from_quat(q).as_euler('xyz', degrees=False)
 
+        stamp = msg.get('header', {}).get('stamp', {})
+
         return cls(
             qx=q[0],
             qy=q[1],
@@ -355,10 +415,15 @@ class IMU:
             ax=acc.get('x', 0.0),
             ay=acc.get('y', 0.0),
             az=acc.get('z', 0.0),
+            stamp_sec=stamp.get('sec', 0),
+            stamp_nanosec=stamp.get('nanosec', 0),
         )
 
     def to_ros(self):
         return {
+            'header': {
+                'stamp': {'sec': self.stamp_sec, 'nanosec': self.stamp_nanosec},
+            },
             'orientation': {
                 'x': self.qx,
                 'y': self.qy,
