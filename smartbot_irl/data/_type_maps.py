@@ -1,11 +1,16 @@
 # smartbot_irl/data/type_maps.py
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+
+from smartbot_irl.utils import SmartLogger
+
+logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
 
 # ------------------------------------------------------------
@@ -334,13 +339,35 @@ class JointState:
     @classmethod
     def from_ros(cls, msg: dict):
         stamp = msg.get('header', {}).get('stamp', {})
+        joint_names = msg.get('name', [])
+
+        joint_positions = msg.get('position', [])
+        joint_velocities = msg.get('velocity', [])
+
         return cls(
-            names=msg.get('name', []),
-            positions=msg.get('position', []),
-            velocities=msg.get('velocity', []),
+            names=joint_names,
+            positions=joint_positions,
+            velocities=joint_velocities,
             stamp_sec=stamp.get('sec', 0),
             stamp_nanosec=stamp.get('nanosec', 0),
         )
+
+    # TODO Handle missing joint names.
+    @property
+    def left_pos(self) -> float:
+        return self.positions[self.names.index('left_wheel')]
+
+    @property
+    def right_pos(self) -> float:
+        return self.positions[self.names.index('right_wheel')]
+
+    @property
+    def left_vel(self) -> float:
+        return self.velocities[self.names.index('left_wheel')]
+
+    @property
+    def right_vel(self) -> float:
+        return self.velocities[self.names.index('right_wheel')]
 
     def to_ros(self):
         return {
