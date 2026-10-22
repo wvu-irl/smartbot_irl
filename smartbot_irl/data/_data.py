@@ -70,7 +70,9 @@ class SensorData:
         self.manipulator_curr_preset: String = String()
         # self.seen_hexes: PoseArray = PoseArray()
         self.seen_hexes: ArucoMarkers = ArucoMarkers()
-        self.seen_robots: PoseArray = PoseArray()
+        self.seen_robots: ArucoMarkers = ArucoMarkers()
+        self.seen_blocks: ArucoMarkers = ArucoMarkers()
+        self.seen_beacons: ArucoMarkers = ArucoMarkers()
 
     # TODO: This isn't used anymore.
     @classmethod
@@ -89,7 +91,9 @@ class SensorData:
         self.gripper_curr_state = String()
         self.manipulator_curr_preset = String()
         self.seen_hexes = ArucoMarkers()
-        self.seen_robots = PoseArray()
+        self.seen_robots = ArucoMarkers()
+        self.seen_blocks = ArucoMarkers()
+        self.seen_beacons = ArucoMarkers()
         return self
 
     # ------------------------------------------------------------------
@@ -114,6 +118,10 @@ class SensorData:
             d['seen_hexes'] = self.seen_hexes.to_ros()
         if self.seen_robots:
             d['seen_robots'] = self.seen_robots.to_ros()
+        if self.seen_blocks:
+            d['seen_blocks'] = self.seen_blocks.to_ros()
+        if self.seen_beacons:
+            d['seen_beacons'] = self.seen_beacons.to_ros()
         return d
 
     def __repr__(self):

@@ -58,6 +58,8 @@ class SmartBotReal(SmartBotBase):
             'manipulator_curr_preset': (String, 'manipulator_curr_preset'),
             'seen_robots': (PoseArray, 'seen_robots'),
             'seen_hexes': (ArucoMarkers, 'seen_hexes'),
+            'seen_blocks': (ArucoMarkers, 'seen_blocks'),
+            'seen_beacons': (ArucoMarkers, 'seen_beacons'),
         }
 
         # Keep a list of our connected topics.
@@ -79,6 +81,8 @@ class SmartBotReal(SmartBotBase):
             'manipulator_curr_preset': 3.0,
             'seen_robots': 0.5,
             'seen_hexes': 0.5,
+            'seen_blocks': 0.5,
+            'seen_beacons': 0.5,
         }
 
         # Publishers.
