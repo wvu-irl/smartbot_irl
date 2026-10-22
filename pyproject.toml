@@ -15,6 +15,7 @@ dependencies = [
   'scipy',
   'colorama',
   'pandas',
+  'rosbags'
 ]
 name = "smartbot-irl"
 version = "0.0.1"

@@ -1,17 +1,18 @@
 import queue
+from multiprocessing import Process, Queue
 from socket import timeout
-from time import time, sleep
+from time import sleep, time
+from typing import List
 
 import matplotlib
-from multiprocessing import Process, Queue
 
 from smartbot_irl.utils import SmartLogger, logging
 
 matplotlib.use('TkAgg')
 
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 
 logger = SmartLogger(level=logging.CRITICAL)  # Print statements, but better!
 
@@ -165,6 +166,38 @@ class FigureWrapper:
         self.items.append((ax, 'line', artists, x_col, y_col_list, window, buffers))
         return artists
 
+    def add_array_line(self, x_col=None, y_col=None, **kwargs):
+        """Plot an entire x/y array, replacing the previous data each update."""
+        if x_col is None:
+            raise ValueError('x_col must be specified')
+        if y_col is None:
+            raise ValueError('y_col must be specified')
+
+        ax = self._new_subplot()
+
+        artist_kwargs = {}
+        axes_kwargs = {}
+
+        for k, v in kwargs.items():
+            setter = f'set_{k}'
+            if hasattr(ax, setter):
+                axes_kwargs[k] = v
+            else:
+                artist_kwargs[k] = v
+
+        (line,) = ax.plot([], [], **artist_kwargs)
+
+        if axes_kwargs:
+            self._apply_kwargs(ax, axes_kwargs)
+
+        self.fig.set_size_inches(10, 8, forward=True)
+        self.fig.subplots_adjust(hspace=0.3)
+
+        # Keep the same tuple layout as add_line().
+        self.items.append((ax, 'array_line', [[line]], x_col, [y_col], None, None))
+
+        return line
+
     def add_scatter(self, x_col=None, y_col=None, window=1000, **kwargs):
         # For scatter, still create marker-style line2D objects
         kwargs.setdefault('ls', '')
@@ -173,6 +206,27 @@ class FigureWrapper:
 
     def update(self, df_last_row: pd.Series) -> None:
         for ax, kind, artists, x_col, y_col_list, window, buffers in self.items:
+            if kind == 'array_line':
+                try:
+                    xvals = np.asarray(df_last_row[x_col], dtype=float)
+                    yvals = np.asarray(df_last_row[y_col_list[0]], dtype=float)
+                except KeyError:
+                    logger.debug(f'No column for {x_col} or {y_col_list[0]} yet!')
+                    continue
+
+                if xvals.size != yvals.size:
+                    raise ValueError(f'{x_col} and {y_col_list[0]} must have the same length')
+
+                # Do not let inf/nan lidar returns destroy the plot limits.
+                valid = np.isfinite(xvals) & np.isfinite(yvals)
+
+                line = artists[0][0]
+                line.set_data(xvals[valid], yvals[valid])
+
+                ax.relim()
+                ax.autoscale_view()
+
+                continue
             # Compute x once
             xval = df_last_row.name if x_col is None else df_last_row[x_col]
 
@@ -275,10 +329,15 @@ class PlotManager:
         self.data_queue = Queue(maxsize=1)
         self.leave_plots = leave_plots
 
-    def add_figure(self, max_fps=30, **kwargs):
+    def create_figure(self, max_fps=30, **kwargs):
         fw = FigureWrapper(max_fps=max_fps, **kwargs)
         self.figures.append(fw)
         return fw
+
+    def add_figures(self, figs: List[FigureWrapper] | FigureWrapper, max_fps=30, **kwargs):
+        if isinstance(figs, FigureWrapper):
+            figs = [figs]
+        self.figures.extend(figs)
 
     def update_all(self, data: pd.Series) -> None:
         for fw in self.figures:

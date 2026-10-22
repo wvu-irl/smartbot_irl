@@ -1,0 +1,111 @@
+# Generated file. Do not edit.
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import ClassVar
+
+
+
+
+@dataclass(slots=True)
+class FieldType:
+    type_id: int = 0
+    capacity: int = 0
+    string_capacity: int = 0
+    nested_type_name: str = ""
+
+    FIELD_TYPE_NOT_SET: ClassVar[int] = 0
+    FIELD_TYPE_NESTED_TYPE: ClassVar[int] = 1
+    FIELD_TYPE_INT8: ClassVar[int] = 2
+    FIELD_TYPE_UINT8: ClassVar[int] = 3
+    FIELD_TYPE_INT16: ClassVar[int] = 4
+    FIELD_TYPE_UINT16: ClassVar[int] = 5
+    FIELD_TYPE_INT32: ClassVar[int] = 6
+    FIELD_TYPE_UINT32: ClassVar[int] = 7
+    FIELD_TYPE_INT64: ClassVar[int] = 8
+    FIELD_TYPE_UINT64: ClassVar[int] = 9
+    FIELD_TYPE_FLOAT: ClassVar[int] = 10
+    FIELD_TYPE_DOUBLE: ClassVar[int] = 11
+    FIELD_TYPE_LONG_DOUBLE: ClassVar[int] = 12
+    FIELD_TYPE_CHAR: ClassVar[int] = 13
+    FIELD_TYPE_WCHAR: ClassVar[int] = 14
+    FIELD_TYPE_BOOLEAN: ClassVar[int] = 15
+    FIELD_TYPE_BYTE: ClassVar[int] = 16
+    FIELD_TYPE_STRING: ClassVar[int] = 17
+    FIELD_TYPE_WSTRING: ClassVar[int] = 18
+    FIELD_TYPE_FIXED_STRING: ClassVar[int] = 19
+    FIELD_TYPE_FIXED_WSTRING: ClassVar[int] = 20
+    FIELD_TYPE_BOUNDED_STRING: ClassVar[int] = 21
+    FIELD_TYPE_BOUNDED_WSTRING: ClassVar[int] = 22
+    FIELD_TYPE_NESTED_TYPE_ARRAY: ClassVar[int] = 49
+    FIELD_TYPE_INT8_ARRAY: ClassVar[int] = 50
+    FIELD_TYPE_UINT8_ARRAY: ClassVar[int] = 51
+    FIELD_TYPE_INT16_ARRAY: ClassVar[int] = 52
+    FIELD_TYPE_UINT16_ARRAY: ClassVar[int] = 53
+    FIELD_TYPE_INT32_ARRAY: ClassVar[int] = 54
+    FIELD_TYPE_UINT32_ARRAY: ClassVar[int] = 55
+    FIELD_TYPE_INT64_ARRAY: ClassVar[int] = 56
+    FIELD_TYPE_UINT64_ARRAY: ClassVar[int] = 57
+    FIELD_TYPE_FLOAT_ARRAY: ClassVar[int] = 58
+    FIELD_TYPE_DOUBLE_ARRAY: ClassVar[int] = 59
+    FIELD_TYPE_LONG_DOUBLE_ARRAY: ClassVar[int] = 60
+    FIELD_TYPE_CHAR_ARRAY: ClassVar[int] = 61
+    FIELD_TYPE_WCHAR_ARRAY: ClassVar[int] = 62
+    FIELD_TYPE_BOOLEAN_ARRAY: ClassVar[int] = 63
+    FIELD_TYPE_BYTE_ARRAY: ClassVar[int] = 64
+    FIELD_TYPE_STRING_ARRAY: ClassVar[int] = 65
+    FIELD_TYPE_WSTRING_ARRAY: ClassVar[int] = 66
+    FIELD_TYPE_FIXED_STRING_ARRAY: ClassVar[int] = 67
+    FIELD_TYPE_FIXED_WSTRING_ARRAY: ClassVar[int] = 68
+    FIELD_TYPE_BOUNDED_STRING_ARRAY: ClassVar[int] = 69
+    FIELD_TYPE_BOUNDED_WSTRING_ARRAY: ClassVar[int] = 70
+    FIELD_TYPE_NESTED_TYPE_BOUNDED_SEQUENCE: ClassVar[int] = 97
+    FIELD_TYPE_INT8_BOUNDED_SEQUENCE: ClassVar[int] = 98
+    FIELD_TYPE_UINT8_BOUNDED_SEQUENCE: ClassVar[int] = 99
+    FIELD_TYPE_INT16_BOUNDED_SEQUENCE: ClassVar[int] = 100
+    FIELD_TYPE_UINT16_BOUNDED_SEQUENCE: ClassVar[int] = 101
+    FIELD_TYPE_INT32_BOUNDED_SEQUENCE: ClassVar[int] = 102
+    FIELD_TYPE_UINT32_BOUNDED_SEQUENCE: ClassVar[int] = 103
+    FIELD_TYPE_INT64_BOUNDED_SEQUENCE: ClassVar[int] = 104
+    FIELD_TYPE_UINT64_BOUNDED_SEQUENCE: ClassVar[int] = 105
+    FIELD_TYPE_FLOAT_BOUNDED_SEQUENCE: ClassVar[int] = 106
+    FIELD_TYPE_DOUBLE_BOUNDED_SEQUENCE: ClassVar[int] = 107
+    FIELD_TYPE_LONG_DOUBLE_BOUNDED_SEQUENCE: ClassVar[int] = 108
+    FIELD_TYPE_CHAR_BOUNDED_SEQUENCE: ClassVar[int] = 109
+    FIELD_TYPE_WCHAR_BOUNDED_SEQUENCE: ClassVar[int] = 110
+    FIELD_TYPE_BOOLEAN_BOUNDED_SEQUENCE: ClassVar[int] = 111
+    FIELD_TYPE_BYTE_BOUNDED_SEQUENCE: ClassVar[int] = 112
+    FIELD_TYPE_STRING_BOUNDED_SEQUENCE: ClassVar[int] = 113
+    FIELD_TYPE_WSTRING_BOUNDED_SEQUENCE: ClassVar[int] = 114
+    FIELD_TYPE_FIXED_STRING_BOUNDED_SEQUENCE: ClassVar[int] = 115
+    FIELD_TYPE_FIXED_WSTRING_BOUNDED_SEQUENCE: ClassVar[int] = 116
+    FIELD_TYPE_BOUNDED_STRING_BOUNDED_SEQUENCE: ClassVar[int] = 117
+    FIELD_TYPE_BOUNDED_WSTRING_BOUNDED_SEQUENCE: ClassVar[int] = 118
+    FIELD_TYPE_NESTED_TYPE_UNBOUNDED_SEQUENCE: ClassVar[int] = 145
+    FIELD_TYPE_INT8_UNBOUNDED_SEQUENCE: ClassVar[int] = 146
+    FIELD_TYPE_UINT8_UNBOUNDED_SEQUENCE: ClassVar[int] = 147
+    FIELD_TYPE_INT16_UNBOUNDED_SEQUENCE: ClassVar[int] = 148
+    FIELD_TYPE_UINT16_UNBOUNDED_SEQUENCE: ClassVar[int] = 149
+    FIELD_TYPE_INT32_UNBOUNDED_SEQUENCE: ClassVar[int] = 150
+    FIELD_TYPE_UINT32_UNBOUNDED_SEQUENCE: ClassVar[int] = 151
+    FIELD_TYPE_INT64_UNBOUNDED_SEQUENCE: ClassVar[int] = 152
+    FIELD_TYPE_UINT64_UNBOUNDED_SEQUENCE: ClassVar[int] = 153
+    FIELD_TYPE_FLOAT_UNBOUNDED_SEQUENCE: ClassVar[int] = 154
+    FIELD_TYPE_DOUBLE_UNBOUNDED_SEQUENCE: ClassVar[int] = 155
+    FIELD_TYPE_LONG_DOUBLE_UNBOUNDED_SEQUENCE: ClassVar[int] = 156
+    FIELD_TYPE_CHAR_UNBOUNDED_SEQUENCE: ClassVar[int] = 157
+    FIELD_TYPE_WCHAR_UNBOUNDED_SEQUENCE: ClassVar[int] = 158
+    FIELD_TYPE_BOOLEAN_UNBOUNDED_SEQUENCE: ClassVar[int] = 159
+    FIELD_TYPE_BYTE_UNBOUNDED_SEQUENCE: ClassVar[int] = 160
+    FIELD_TYPE_STRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 161
+    FIELD_TYPE_WSTRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 162
+    FIELD_TYPE_FIXED_STRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 163
+    FIELD_TYPE_FIXED_WSTRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 164
+    FIELD_TYPE_BOUNDED_STRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 165
+    FIELD_TYPE_BOUNDED_WSTRING_UNBOUNDED_SEQUENCE: ClassVar[int] = 166
+
+    __msgtype__: ClassVar[str] = "type_description_interfaces/msg/FieldType"
+
+
+__all__ = ["FieldType"]

@@ -1,31 +1,27 @@
 # smartbot_real.py
 import os
 
+from smartbot_irl.data._data import SensorSpec
+
 os.environ['AUTOBAHN_USE_NVX'] = '0'
 
 import logging
 import threading
 import time
-from typing import Optional
+from typing import List, Optional
 
 import roslibpy
 
+from smartbot_irl.conversion import from_dict
+
+# from smartbot_irl.ros_py_mapping import SENSORS
 from smartbot_irl.utils import SmartLogger
 
-from ..data import Command, SensorData
-from ..data._type_maps import (
-    IMU,
-    ArucoMarkers,
-    JointState,
-    LaserScan,
-    Odometry,
-    PoseArray,
-    String,
-)
+from ..data import COMMANDS, SENSORS, Command, SensorData
 from ..drawing import Drawer
 from .smartbot_base import SmartBotBase
 
-logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
+logger = SmartLogger(level=logging.DEBUG)  # Print statements, but better!
 
 
 class SmartBotReal(SmartBotBase):
@@ -37,56 +33,28 @@ class SmartBotReal(SmartBotBase):
     def __init__(self, drawing=False, smartbot_num=0, draw_region=((-5, 5), (-5, 5))):
         super().__init__(drawing=drawing, draw_region=draw_region)
 
+        # Create pygame drawer and give it reference to this robot's sensor data struct.
         self.drawer = Drawer(lambda: self.sensor_data, region=draw_region) if drawing else None
         self._running = False
+
         self.smartbot_num = smartbot_num
         print(f'my num is {self.smartbot_num}')
+
         self.client: roslibpy.Ros | None = None
+
+        # Use this...
         self._connected = threading.Event()
 
         # Specify which topics and their types we will subscribe to.
         self.sensor_data = SensorData()
 
-        # "<ros2_topic_name>": (<type_maps.Pose>, "<SensorData.field>")
-        self._topic_map = {
-            'odom': (Odometry, 'odom'),
-            'scan': (LaserScan, 'scan'),
-            'joint_states': (JointState, 'joints'),
-            'aruco_poses': (PoseArray, 'aruco_poses'),
-            'livox/imu': (IMU, 'imu'),
-            'gripper_curr_state': (String, 'gripper_curr_state'),
-            'manipulator_curr_preset': (String, 'manipulator_curr_preset'),
-            'seen_robots': (PoseArray, 'seen_robots'),
-            'seen_hexes': (ArucoMarkers, 'seen_hexes'),
-        }
-
         # Keep a list of our connected topics.
         self._subscriptions: list[roslibpy.Topic] = []
+        # self._publishers: list[roslibpy.Topic] = []
+        self._publishers: dict[str, roslibpy.Topic] = {}
 
-        # Track last time we received a message for each SensorData field.
-        self._last_msg_time: dict[str, float] = {
-            field_name: 0.0 for (_, field_name) in self._topic_map.values()
-        }
-
-        # TODO make this adjustable. If timeout is faster than publish rate we get flickering data.
-        self._timeout_sec = {
-            'scan': 5.0,
-            'odom': 5.0,
-            'joints': 1.0,
-            'aruco_poses': 0.25,
-            'imu': 0.25,
-            'gripper_curr_state': 3.0,
-            'manipulator_curr_preset': 3.0,
-            'seen_robots': 0.5,
-            'seen_hexes': 0.5,
-        }
-
-        # Publishers.
-        self.cmd_vel_pub: Optional[roslibpy.Topic] = None
-        self.manipulator_presets_pub: Optional[roslibpy.Topic] = None
-        self.gripper_closed_pub: Optional[roslibpy.Topic] = None
-        self.place_hex_pub: Optional[roslibpy.Topic] = None
-        self.pos_reset_pub: Optional[roslibpy.Topic] = None
+        # Keep track of last time we got a message on each sensor stream.
+        self._last_msg_time = {field_name: 0.0 for field_name in SENSORS}
 
     def init(self, host: str = 'localhost', port: int = 9090, yaml_path=None) -> None:
         """Connect the smartbot wrapper to a real smartbot.
@@ -102,7 +70,7 @@ class SmartBotReal(SmartBotBase):
                 What port to try and connect to the rosbridge on. The
                 rosbridge_server node defaults to 9090.
         """
-        prefix = f'/smartbot{self.smartbot_num}'
+        prefix = f'smartbot{self.smartbot_num}'
         self._running = True
 
         # Connect to ros bridge server. Give up after 5s.
@@ -110,65 +78,57 @@ class SmartBotReal(SmartBotBase):
         self.client = roslibpy.Ros(host=host, port=port, is_secure=False)
         self.client.on_ready(self._connected.set)
         self.client.run()
+
         logger.info(f'Connecting to rosbridge at ws://{host}:{port} ...')
         self._connected.wait(timeout=5.0)
-
         if not self.client.is_connected:
             logger.error(msg='Could not connect to smartbot!')
             raise RuntimeError('Failed to connect to rosbridge_server.')
 
-        # Set up publishers.
-        self.cmd_vel_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/cmd_vel',
-            'geometry_msgs/Twist',
-        )
-        self.manipulator_presets_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/manipulator_presets',
-            'std_msgs/String',
-        )
-        self.gripper_closed_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/gripper_closed',
-            'std_msgs/Bool',
-        )
-        self.place_hex_pub = roslibpy.Topic(
-            self.client,
-            prefix + '/place_hex',
-            'geometry_msgs/Pose',
-        )
-        self.pos_reset_pub = roslibpy.Topic(
-            ros=self.client, name=prefix + '/pos_reset', message_type='example_interfaces/Bool'
-        )
+        # set zero time
+        self._last_msg_time = {field_name: 0.0 for field_name in SENSORS}
 
-        def make_callback(field_name, cls):
-            """
-            Make subscription callback and build dict of last reception time.
-            Use this to wipe out messages that have gone stale.
-            """
+        for name, spec in COMMANDS.items():
+            self._publishers[name] = roslibpy.Topic(
+                ros=self.client,
+                name=f'/{prefix}/{spec.topic}',
+                message_type=spec.ros_type,
+            )
+
+        def make_callback(field_name: str, spec: SensorSpec):
+            """func-factory. The field_name here needs match the SensorData attr. Param `spec` is used to setup the smart type conversion."""
 
             def cb(msg):
-                # Update sensor_data field.
-                setattr(self.sensor_data, field_name, cls.from_ros(msg))
-                # Update specific data's timestamp used to clear stale data.
-                self._last_msg_time[field_name] = time.time()
+                raw = from_dict(spec.ros_type, msg)
+                value = spec.type.from_ros(raw)
+
+                setattr(self.sensor_data.raw, field_name, raw)
+                setattr(self.sensor_data, field_name, value)
+
+                self._last_msg_time[field_name] = time.monotonic()
 
             return cb
 
-        # Now actually make the callbacks and store them.
-        for name, (cls, field_name) in self._topic_map.items():
+        # Make subscribers.
+        # TODO: What do when SENSORS is malspecified?
+        for field_name, spec in SENSORS.items():
             topic = roslibpy.Topic(
-                ros=self.client, name=f'{prefix}/{name}', message_type=cls.ros_type
+                ros=self.client,
+                name=f'/{prefix}/{spec.ros_topic}',
+                message_type=spec.ros_type.__msgtype__,
             )
-            topic.subscribe(callback=make_callback(field_name, cls))
-            self._subscriptions.append(topic)
 
-        print(f'Subscribers and publishers found for {prefix}/* topics')
+            topic.subscribe(
+                callback=make_callback(
+                    field_name,
+                    spec,
+                )
+            )
+
+            self._subscriptions.append(topic)
 
     def place_hex(self):
         logger.error('Not implemented for real robots!')
-        # raise Exception(NotImplemented)
 
     def write(self, cmd: Command):
         """Publish the contents of :param:`cmd` to Ros2.
@@ -183,53 +143,29 @@ class SmartBotReal(SmartBotBase):
             print('Not connected to ROSBridge; cannot publish command.')
             return
 
-        assert self.cmd_vel_pub is not None  # TODO make a mapping for this and loop for asserts.
-        assert self.manipulator_presets_pub is not None
-        assert self.gripper_closed_pub is not None
-        assert self.pos_reset_pub is not None
-
-        msgs = cmd.to_ros()
-
-        if 'geometry_msgs/Twist' in msgs:
-            self.cmd_vel_pub.publish(roslibpy.Message(msgs['geometry_msgs/Twist']))
-
-        if 'std_msgs/String' in msgs:
-            self.manipulator_presets_pub.publish(roslibpy.Message(msgs['std_msgs/String']))
-
-        if 'std_msgs/Bool' in msgs:
-            self.gripper_closed_pub.publish(roslibpy.Message(msgs['std_msgs/Bool']))
-
-        if 'example_interfaces/Bool' in msgs:
-            self.pos_reset_pub.publish(
-                message=roslibpy.Message(values=msgs['example_interfaces/Bool'])
-            )
+        for name, msg in cmd.to_ros().items():
+            self._publishers[name].publish(roslibpy.Message(msg))
 
     def read(self) -> SensorData:
-        """Return current state of sensor data (after clearing stale fields).
+        now = time.monotonic()
 
-        Uses the per-topic timeout limit specified in
-        ``SmartBotReal._timeout_sec``and stored in
-        ::dict::`SmartBotReal._last_msg_time` to replace any given sensor data
-        attr with its initialized (empty) type. This is not the best way to
-        solve this problem.
+        for field_name, spec in SENSORS.items():
+            last_time = self._last_msg_time[field_name]
 
-        Returns
-        -------
-        SensorData
+            if last_time != 0.0 and now - last_time > spec.timeout:
+                setattr(
+                    self.sensor_data,
+                    field_name,
+                    spec.type(),
+                )
 
-        """
-        now = time.time()
+                setattr(
+                    self.sensor_data.raw,
+                    field_name,
+                    None,
+                )
 
-        # Check each topics time since last received and clear it if too long ago.
-        for field_name, last_time in self._last_msg_time.items():
-            timeout = self._timeout_sec.get(field_name, None)
-            if timeout is None:
-                continue
-
-            if last_time != 0.0 and (now - last_time > timeout):
-                data_type = type(getattr(self.sensor_data, field_name))
-                setattr(self.sensor_data, field_name, data_type())
-                self._last_msg_time[field_name] = 0.0  # Reset timer.
+                self._last_msg_time[field_name] = 0.0
 
         return self.sensor_data
 
@@ -252,8 +188,10 @@ class SmartBotReal(SmartBotBase):
     def shutdown(self) -> None:
         """Cleanly disconnect all topics, publishers, and rosbridge client."""
         print('Shutting down SmartBotReal...')
+
         cmd = Command(wheel_vel_left=0.0, wheel_vel_right=0.0, linear_vel=0.0, angular_vel=0.0)
         self.write(cmd)
+
         # Unsubscribe all topics.
         for topic in self._subscriptions:
             try:
@@ -263,12 +201,10 @@ class SmartBotReal(SmartBotBase):
         self._subscriptions.clear()
 
         # Stop publishers.
-        for pub in [self.cmd_vel_pub, self.gripper_closed_pub, self.pos_reset_pub]:
-            if pub:
-                try:
-                    pub.unadvertise()
-                except Exception:
-                    pass
+        for pub in self._publishers.values():
+            pub.unadvertise()
+
+        self._publishers.clear()
 
         # Close client connection.
         if self.client:

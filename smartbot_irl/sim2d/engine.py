@@ -4,7 +4,8 @@ import time
 
 from numpy import random
 
-from ..data import ArucoMarkers, Command, Pose, SensorData
+from ..data import Command, SensorData
+from ..types import ArucoMarkers, Pose
 
 
 class SimEngine:
@@ -26,7 +27,7 @@ class SimEngine:
     def __init__(self, wheel_base: float = 0.3):
         self.wheel_base = wheel_base
         self.last_t = time.time()
-        self.state = SensorData.initialized()  # holds all simulated values
+        self.state = SensorData()
         self._last_vx = 0.0
         self._last_vy = 0.0
 
@@ -273,13 +274,16 @@ class SimEngine:
             rel_poses.append(Pose(x=rel_x, y=rel_y, z=0.0))
             s.seen_hexes = ArucoMarkers(poses=rel_poses, marker_ids=self.marker_ids)
 
-    def read_all(self):
-        for name, val in self.state.__dict__.items():
-            try:
-                if val.stamp_sec is not None:
-                    val.stamp_sec = time.time()
-            except:
-                pass
+    def read_all(self) -> SensorData:
+        now = time.time()
+
+        for name, value in vars(self.state).items():
+            if name == 'raw':
+                continue
+
+            if hasattr(value, 'stamp_sec'):
+                value.stamp_sec = now
+
         return self.state
 
     def reset(self):

@@ -1,20 +1,37 @@
-from dataclasses import dataclass, fields, is_dataclass
-from typing import Any, Dict
+# smartbot_irl.data._data.py
 
-from ._type_maps import (
-    IMU,
+from __future__ import annotations
+
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import Any, Dict, List
+
+from smartbot_irl.ros_types.geometry_msgs.msg import PoseArray as RosPoseArray
+from smartbot_irl.ros_types.nav_msgs.msg import Odometry as RosOdometry
+from smartbot_irl.ros_types.sensor_msgs.msg import CompressedImage as RosCompressedImage
+from smartbot_irl.ros_types.sensor_msgs.msg import Image as RosImage
+
+# from smartbot_irl.ros_types.sensor_msgs.msg import Image as RosImage
+from smartbot_irl.ros_types.sensor_msgs.msg import Imu as RosImu
+from smartbot_irl.ros_types.sensor_msgs.msg import JointState as RosJointState
+from smartbot_irl.ros_types.sensor_msgs.msg import LaserScan as RosLaserScan
+from smartbot_irl.ros_types.std_msgs.msg import String as RosString
+from smartbot_irl.types import (
     ArucoMarkers,
-    JointState,
+    BaseType,
+    Imu,
+    Joints,
     LaserScan,
     Odometry,
     PoseArray,
     String,
 )
 
+from ..types._base_type import BaseType
+
 
 def list_sensor_columns() -> list[str]:
     """Return top-level keys from flatten()."""
-    s = SensorData.initialized()
+    s = SensorData()
     return list(s.flatten().keys())
 
 
@@ -53,76 +70,239 @@ def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
     return flat
 
 
+# I have to define this statically to get completion. But it will end up just being all the ros_types that were 1-1 for the SensorData attributes?
+# @dataclass
+# class RawSensorData:
+#     imu: RosImu = field(default_factory=RosImu)
+#     joints: RosJointState = field(default_factory=RosJointState)
+#     odom: RosOdometry = field(default_factory=RosOdometry)
+#     scan: RosLaserScan = field(default_factory=RosLaserScan)
+#     camera: RosCompressedImage = field(default_factory=RosCompressedImage)
+
+
+# class SensorData:
+#     def __init__(self):
+#         """
+#         The attributes here need to be the regular types from types.*. Not SensorSpec... Maybe each type has a field which specifies the ros2 topic and type it maps to? This can be set here. Or set at runtime.
+#         I should make a base class for the types to enforce that interface.
+#         """
+#         self.odom = ArucoMarkers()
+#         self.scan = LaserScan()
+#         self.joints = Joints()
+#         self.aruco_poses = PoseArray()
+#         self.imu = Imu()
+#         self.gripper_curr_state = String()
+#         self.manipulator_curr_state = String()
+#         self.seen_robots = PoseArray()
+
+#     @classmethod
+#     def initialized(cls) -> 'SensorData':
+#         return cls()
+
+#     def to_ros(self) -> dict:
+#         result = {}
+
+#         # Iterate through all the attr of the object.
+#         # This is maybe a bad idea since it means we can't add any attributes that aren't ros2type mappable...
+#         # Could check if each attr has .to_ros, but that is also silly...
+#         for f in fields(self):
+#             if f.name == 'raw':
+#                 continue
+
+#             value = getattr(self, f.name)
+
+#             if value is not None:
+#                 result[f.name] = value.to_ros()
+
+#         return result
+
+#     def __repr__(self) -> str:
+#         populated = []
+#         missing = []
+
+#         for f in fields(self):
+#             if f.name == 'raw':
+#                 continue
+
+#             value = getattr(self, f.name)
+
+#             if value is None:
+#                 missing.append(f.name)
+#             else:
+#                 populated.append(f.name)
+
+#         return f'SensorData(populated={populated}, missing={missing})'
+
+#     def flatten(self) -> dict[str, Any]:
+#         out = {}
+
+#         for f in fields(self):
+#             if f.name == 'raw':
+#                 continue
+
+#             value = getattr(self, f.name)
+
+#             out.update(
+#                 flatten_generic(
+#                     f.name,
+#                     value,
+#                 )
+#             )
+
+#         return out
+
+
+@dataclass
+class RawSensorData:
+    odom: RosOdometry | None = None
+    scan: RosLaserScan | None = None
+    joints: RosJointState | None = None
+    aruco_poses: RosPoseArray | None = None
+    imu: RosImu | None = None
+    gripper_curr_state: RosString | None = None
+    manipulator_curr_preset: RosString | None = None
+    seen_robots: RosPoseArray | None = None
+
+
+@dataclass
 class SensorData:
-    """
-    Container for all SmartBot sensor topics.
-    Each field starts as ``None`` and becomes a populated message
-    object (LaserScan, Odometry, etc.) once that topic is received.
-    """
+    raw: RawSensorData = field(default_factory=RawSensorData)
+    odom: Odometry = field(default_factory=Odometry)
+    scan: LaserScan = field(default_factory=LaserScan)
+    joints: Joints = field(default_factory=Joints)
+    seen_hexes: PoseArray = field(default_factory=PoseArray)
+    imu: Imu = field(default_factory=Imu)
+    gripper_curr_state: String = field(default_factory=String)
+    manipulator_curr_preset: String = field(default_factory=String)
+    seen_robots: PoseArray = field(default_factory=PoseArray)
 
-    def __init__(self) -> None:
-        self.odom: Odometry = Odometry()
-        self.scan: LaserScan = LaserScan()
-        self.joints: JointState = JointState()
-        self.aruco_poses: PoseArray = PoseArray()
-        self.imu: IMU = IMU()
-        self.gripper_curr_state: String = String()
-        self.manipulator_curr_preset: String = String()
-        # self.seen_hexes: PoseArray = PoseArray()
-        self.seen_hexes: ArucoMarkers = ArucoMarkers()
-        self.seen_robots: PoseArray = PoseArray()
-
-    # TODO: This isn't used anymore.
     @classmethod
     def initialized(cls) -> 'SensorData':
-        """
-        Return a new SensorData with all message objects constructed using
-        their default constructors. Useful for simulation environments
-        where we don't wait for ROS topics to populate.
-        """
-        self = cls()
-        self.odom = Odometry()
-        self.scan = LaserScan()
-        self.joints = JointState()
-        self.aruco_poses = PoseArray()
-        self.imu = IMU()
-        self.gripper_curr_state = String()
-        self.manipulator_curr_preset = String()
-        self.seen_hexes = ArucoMarkers()
-        self.seen_robots = PoseArray()
-        return self
+        return cls()
 
-    # ------------------------------------------------------------------
     def to_ros(self) -> dict:
-        """Convert only populated fields to ROS-like dicts."""
-        d = {}
-        for name, val in self.__dict__.items():
-            if val is not None:
-                d[str(name)] = val.to_ros()
-        return d
+        result = {}
 
-    def __repr__(self):
-        keys = [k for k, v in vars(self).items() if v is not None]
-        missing = [k for k, v in vars(self).items() if v is None]
-        return f'SensorData(populated={keys}, missing={missing})'
+        # Iterate through all the attr of the object.
+        # This is maybe a bad idea since it means we can't add any attributes that aren't ros2type mappable...
+        # Could check if each attr has .to_ros, but that is also silly...
+        for f in fields(self):
+            if f.name == 'raw':
+                continue
 
-    def flatten(self) -> dict:
-        """Return a partially flattened dict of all sensor fields."""
+            value = getattr(self, f.name)
+
+            if value is not None:
+                result[f.name] = value.to_ros()
+
+        return result
+
+    def __repr__(self) -> str:
+        populated = []
+        missing = []
+
+        for f in fields(self):
+            if f.name == 'raw':
+                continue
+
+            value = getattr(self, f.name)
+
+            if value is None:
+                missing.append(f.name)
+            else:
+                populated.append(f.name)
+
+        return f'SensorData(populated={populated}, missing={missing})'
+
+    def flatten(self) -> dict[str, Any]:
         out = {}
-        for name, value in vars(self).items():
-            out.update(flatten_generic(name, value))
+
+        for f in fields(self):
+            if f.name == 'raw':
+                continue
+
+            value = getattr(self, f.name)
+
+            out.update(
+                flatten_generic(
+                    f.name,
+                    value,
+                )
+            )
+
         return out
+
+    def get_specs(self) -> List[TopicSpec]:
+        return [x.mapping_spec for x in vars(self).items() if isinstance(x, BaseType)]
+
+
+# class SensorSpec:
+#     def __int__(self):
+#         self.type: type[Any] | None = None
+#         self.ros_type: type[Any] | None = None
+#         self.ros_topic: str | None = None
+#         self.timeout: float | None = None
+
+
+@dataclass(frozen=True)
+class SensorSpec:
+    type: type[BaseType]
+    ros_type: type[Any]
+    ros_topic: str
+    timeout: float
+
+
+SENSORS = {
+    'odom': SensorSpec(
+        type=Odometry,
+        ros_type=RosOdometry,
+        ros_topic='odom',
+        timeout=5.0,
+    ),
+    'aruco_poses': SensorSpec(
+        type=PoseArray,
+        ros_type=RosPoseArray,
+        ros_topic='aruco_poses',
+        timeout=0.25,
+    ),
+    'seen_robots': SensorSpec(
+        type=PoseArray,
+        ros_type=RosPoseArray,
+        ros_topic='seen_robots',
+        timeout=0.5,
+    ),
+    'joints': SensorSpec(
+        type=Joints,
+        ros_type=RosJointState,
+        ros_topic='joint_states',
+        timeout=0.1,
+    ),
+    'seen_hexes': SensorSpec(
+        type=PoseArray,
+        ros_type=RosPoseArray,
+        ros_topic='seen_hexes',
+        timeout=0.2,
+    ),
+    'imu': SensorSpec(
+        type=Imu,
+        ros_type=RosImu,
+        ros_topic='livox/imu',
+        timeout=0.2,
+    ),
+    'scan': SensorSpec(
+        type=LaserScan,
+        ros_type=RosLaserScan,
+        ros_topic='scan',
+        timeout=0.2,
+    ),
+}
 
 
 @dataclass
 class Command:
     """
     High-level command for SmartBot.
-
-    Supports both:
-      - Differential drive control (linear + angular velocity)
-      - Direct wheel velocity control (left/right)
-      - Manipulator preset and gripper control
+    Twist and indiv whele control.
     """
 
     wheel_vel_left: float | None = 0.0
@@ -134,33 +314,59 @@ class Command:
     reset_position: bool = False
     remove_bias: bool = False
 
-    # -------------------------------------------------------------
-    def to_ros(self) -> dict:
-        """
-        Convert this Command into a dictionary that rosliby can publish.
-        """
+    def to_ros(self) -> dict[str, dict[str, Any]]:
         msgs = {}
 
-        # velocity command (Twist)
         if self.linear_vel is not None or self.angular_vel is not None:
-            msgs['geometry_msgs/Twist'] = {
-                'linear': {'x': self.linear_vel or 0.0, 'y': 0.0, 'z': 0.0},
-                'angular': {'x': 0.0, 'y': 0.0, 'z': self.angular_vel or 0.0},
+            msgs['cmd_vel'] = {
+                'linear': {
+                    'x': self.linear_vel or 0.0,
+                    'y': 0.0,
+                    'z': 0.0,
+                },
+                'angular': {
+                    'x': 0.0,
+                    'y': 0.0,
+                    'z': self.angular_vel or 0.0,
+                },
             }
 
-        # manipulator preset (String)
         if self.manipulator_presets is not None:
-            msgs['std_msgs/String'] = {'data': str(self.manipulator_presets)}
+            msgs['manipulator_presets'] = {'data': self.manipulator_presets}
 
-        # gripper state (Bool)
         if self.gripper_closed is not None:
-            msgs['std_msgs/Bool'] = {'data': bool(self.gripper_closed)}
+            msgs['gripper_closed'] = {'data': self.gripper_closed}
 
-        # reset position (Bool)
-        if self.reset_position:
-            msgs['example_interfaces/Bool'] = {'data': False}
+        if self.reset_position and self.remove_bias:
+            raise ValueError('Conflicting position reset commands')
 
-        if self.remove_bias:
-            msgs['example_interfaces/Bool'] = {'data': True}
+        if self.reset_position or self.remove_bias:
+            msgs['pos_reset'] = {'data': self.remove_bias}
 
         return msgs
+
+
+@dataclass(frozen=True)
+class CommandSpec:
+    topic: str
+    ros_type: str
+
+
+COMMANDS = {
+    'cmd_vel': CommandSpec(
+        topic='cmd_vel',
+        ros_type='geometry_msgs/Twist',
+    ),
+    'manipulator_presets': CommandSpec(
+        topic='manipulator_presets',
+        ros_type='std_msgs/String',
+    ),
+    'gripper_closed': CommandSpec(
+        topic='gripper_closed',
+        ros_type='std_msgs/Bool',
+    ),
+    'pos_reset': CommandSpec(
+        topic='pos_reset',
+        ros_type='example_interfaces/Bool',
+    ),
+}

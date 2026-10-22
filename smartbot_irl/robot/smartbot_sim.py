@@ -1,13 +1,14 @@
 # smartbot_sim.py
-from .smartbot_base import SmartBotBase
+import logging
 import math
-from ..data import JointState, SensorData, Command
+
+from ..data import Command, SensorData
 from ..drawing import Drawer
 from ..sim2d.engine import SimEngine
 
 # from ..sim2d.sensors import SimSensors
 from ..utils import SmartLogger
-import logging
+from .smartbot_base import SmartBotBase
 
 logger = SmartLogger(level=logging.INFO)  # Print statements, but better!
 
@@ -33,7 +34,6 @@ class SmartBotSim(SmartBotBase):
         s = self.engine.state
 
         # Setup 2-wheel diff drive joint data
-        s.joints = JointState()
         s.joints.names = ['left_wheel', 'right_wheel']
         s.joints.positions = [0.0, 0.0]
         s.joints.velocities = [0.0, 0.0]

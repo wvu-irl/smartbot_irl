@@ -27,10 +27,6 @@ class State:
     def __post_init__(self):
         # Create an empty DataFrame
         self.state_vec = pd.DataFrame()
-        # self.state_vec = pd.DataFrame(columns=[
-        #     "t_epoch", "time", "t_prev", "t_elapsed", "turning",
-        #     "x", "y"  # if you want these to exist for plotting
-        # ])
 
         # TODO init first row in student code.
         seed = {
@@ -39,7 +35,6 @@ class State:
             'time': 0.0,
             't_prev': time(),
             't_elapsed': 0.0,
-            'turning': False,
         }
         self.append_row(seed)
 

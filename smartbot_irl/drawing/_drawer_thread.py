@@ -1,8 +1,10 @@
+import math
 import threading
 import time
-import math
-import pygame
 from typing import Callable, Optional
+
+import pygame
+
 from ..data import SensorData
 
 
@@ -69,12 +71,12 @@ class Drawer:
 
         d = self._get()
 
-        scan = d.scan
         # Check if we have received an odometry message yet.
         if d is None or d.odom is None or d.scan is None:
             print('waiting for odom and scan...')
             return
-        x, y, theta = d.odom.x, d.odom.y, d.odom.yaw
+
+        x, y, theta, scan = d.odom.x, d.odom.y, d.odom.yaw, d.scan
 
         # Clear
         self.screen.fill((25, 25, 25))
@@ -95,6 +97,7 @@ class Drawer:
                     continue
                 if r <= 0.01 or math.isinf(r) or math.isnan(r):
                     continue
+
                 # laser angle is relative to robot heading
                 gx = cx + int(self.scale * r * math.cos(theta + a))
                 gy = cy - int(self.scale * r * math.sin(theta + a))
@@ -128,6 +131,8 @@ class Drawer:
                 )
                 label = self.font.render(f'{id}', True, (255, 163, 33))
                 self.screen.blit(label, (mx + 8, my))
+
+        # Add robot.
 
         # Draw robot body
         pygame.draw.circle(self.screen, (255, 230, 0), (cx, cy), 0.3 * self.scale)

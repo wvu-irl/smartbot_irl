@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
+
 from ..data import Command, SensorData
+
 
 class SmartBotBase(ABC):
     """Abstract base defining the robot interface."""
 
-    def __init__(self, draw_region:Tuple=((0,0),(3,3)), drawing=False):
+    def __init__(self, draw_region: Tuple = ((0, 0), (3, 3)), drawing=False):
         self.drawing = drawing
 
     @abstractmethod
@@ -18,6 +20,7 @@ class SmartBotBase(ABC):
     def spin(self): ...
     @abstractmethod
     def shutdown(self): ...
-    # Non-mandatory extensions.
-    def place_hex(self, *a, **kw): raise NotImplementedError
 
+    # Non-mandatory extensions.
+    def place_hex(self, *a, **kw):
+        raise NotImplementedError
