@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, List
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -355,19 +355,19 @@ class JointState:
     # TODO Handle missing joint names.
     @property
     def left_pos(self) -> float:
-        return self.positions[self.names.index('left_wheel')]
+        return self.positions[self.names.index('LDrive')]
 
     @property
     def right_pos(self) -> float:
-        return self.positions[self.names.index('right_wheel')]
+        return self.positions[self.names.index('RDrive')]
 
     @property
     def left_vel(self) -> float:
-        return self.velocities[self.names.index('left_wheel')]
+        return self.velocities[self.names.index('LDrive')]
 
     @property
     def right_vel(self) -> float:
-        return self.velocities[self.names.index('right_wheel')]
+        return self.velocities[self.names.index('RDrive')]
 
     def to_ros(self):
         return {
