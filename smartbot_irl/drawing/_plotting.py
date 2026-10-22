@@ -82,7 +82,7 @@ class FigureWrapper:
         Accepts scalars, lists, numpy arrays, pandas Series.
         """
         if np.isscalar(yval):
-            return [float(yval)]
+            return [float(yval)]  # pyright: ignore[reportArgumentType]
 
         if isinstance(yval, (list, tuple, np.ndarray, pd.Series)):
             # Convert numpy/pandas objects to python floats
@@ -242,7 +242,7 @@ class FigureWrapper:
 
                 # Normalize input into a list of floats
                 if np.isscalar(raw):
-                    yvals = [float(raw)]
+                    yvals = [float(raw)]  # pyright: ignore[reportArgumentType]
                 elif isinstance(raw, (list, tuple, np.ndarray, pd.Series)):
                     yvals = [float(v) for v in raw]
                 else:
@@ -374,7 +374,7 @@ class PlotManager:
 
             # Redraw plots
             for fw in figs:
-                fw.update(df_last_row=data)
+                fw.update(df_last_row=data)  # pyright: ignore[reportCallIssue]
                 fw.redraw_if_needed()
             # logger.warn('Looping draw')
             # sleep(0.001)

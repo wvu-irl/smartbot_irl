@@ -34,7 +34,7 @@ class SmartBotSim(SmartBotBase):
         s = self.engine.state
 
         # Setup 2-wheel diff drive joint data
-        s.joints.names = ['left_wheel', 'right_wheel']
+        s.joints.names = ['LDrive', 'RDrive']
         s.joints.positions = [0.0, 0.0]
         s.joints.velocities = [0.0, 0.0]
 

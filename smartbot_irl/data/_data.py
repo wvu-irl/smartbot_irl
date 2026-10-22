@@ -70,88 +70,6 @@ def flatten_generic(prefix: str, obj: Any) -> Dict[str, Any]:
     return flat
 
 
-# I have to define this statically to get completion. But it will end up just being all the ros_types that were 1-1 for the SensorData attributes?
-# @dataclass
-# class RawSensorData:
-#     imu: RosImu = field(default_factory=RosImu)
-#     joints: RosJointState = field(default_factory=RosJointState)
-#     odom: RosOdometry = field(default_factory=RosOdometry)
-#     scan: RosLaserScan = field(default_factory=RosLaserScan)
-#     camera: RosCompressedImage = field(default_factory=RosCompressedImage)
-
-
-# class SensorData:
-#     def __init__(self):
-#         """
-#         The attributes here need to be the regular types from types.*. Not SensorSpec... Maybe each type has a field which specifies the ros2 topic and type it maps to? This can be set here. Or set at runtime.
-#         I should make a base class for the types to enforce that interface.
-#         """
-#         self.odom = ArucoMarkers()
-#         self.scan = LaserScan()
-#         self.joints = Joints()
-#         self.aruco_poses = PoseArray()
-#         self.imu = Imu()
-#         self.gripper_curr_state = String()
-#         self.manipulator_curr_state = String()
-#         self.seen_robots = PoseArray()
-
-#     @classmethod
-#     def initialized(cls) -> 'SensorData':
-#         return cls()
-
-#     def to_ros(self) -> dict:
-#         result = {}
-
-#         # Iterate through all the attr of the object.
-#         # This is maybe a bad idea since it means we can't add any attributes that aren't ros2type mappable...
-#         # Could check if each attr has .to_ros, but that is also silly...
-#         for f in fields(self):
-#             if f.name == 'raw':
-#                 continue
-
-#             value = getattr(self, f.name)
-
-#             if value is not None:
-#                 result[f.name] = value.to_ros()
-
-#         return result
-
-#     def __repr__(self) -> str:
-#         populated = []
-#         missing = []
-
-#         for f in fields(self):
-#             if f.name == 'raw':
-#                 continue
-
-#             value = getattr(self, f.name)
-
-#             if value is None:
-#                 missing.append(f.name)
-#             else:
-#                 populated.append(f.name)
-
-#         return f'SensorData(populated={populated}, missing={missing})'
-
-#     def flatten(self) -> dict[str, Any]:
-#         out = {}
-
-#         for f in fields(self):
-#             if f.name == 'raw':
-#                 continue
-
-#             value = getattr(self, f.name)
-
-#             out.update(
-#                 flatten_generic(
-#                     f.name,
-#                     value,
-#                 )
-#             )
-
-#         return out
-
-
 @dataclass
 class RawSensorData:
     odom: RosOdometry | None = None
@@ -231,17 +149,6 @@ class SensorData:
             )
 
         return out
-
-    def get_specs(self) -> List[TopicSpec]:
-        return [x.mapping_spec for x in vars(self).items() if isinstance(x, BaseType)]
-
-
-# class SensorSpec:
-#     def __int__(self):
-#         self.type: type[Any] | None = None
-#         self.ros_type: type[Any] | None = None
-#         self.ros_topic: str | None = None
-#         self.timeout: float | None = None
 
 
 @dataclass(frozen=True)
